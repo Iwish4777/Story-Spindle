@@ -62,6 +62,17 @@
     for(const el of document.querySelectorAll('[data-live-timer]'))el.textContent=`${mins}m ${pad(secs)}s today`;
     for(const el of document.querySelectorAll('[data-timer-state]'))el.textContent=p.writingTimer?.running?'Pause timer':'Start timer';
     for(const el of document.querySelectorAll('[data-timer-notice]'))el.textContent=p.writingTimer?.running?'Timer running while this tab is visible':'Timer paused';
+    for(const el of document.querySelectorAll('[data-live-today-minutes]'))el.textContent=String(Math.floor((day.writingMs||0)/60000));
+    for(const el of document.querySelectorAll('[data-live-goal-summary]'))el.textContent=goalSummary(p);
+    for(const el of document.querySelectorAll('[data-goal-live]')) {
+      const goal=p.goals.find(g=>g.id===el.dataset.goalLive);
+      if(!goal)continue;
+      const info=currentGoalProgress(p,goal);el.textContent=info.label;
+      const card=el.closest('.item-card');
+      const fill=card?.querySelector('.goal-progress-fill');if(fill)fill.style.width=`${Math.max(0,Math.min(100,100*info.value/Math.max(1,info.target)))}%`;
+      const track=card?.querySelector('.goal-progress-track');if(track)track.setAttribute('aria-valuenow',String(Math.min(100,Math.round(100*info.value/Math.max(1,info.target)))));
+      const status=card?.querySelector('.goal-status');if(status){status.textContent=info.done?'✓ Reached':goal.kind==='milestone'?'Milestone':'Daily goal';status.classList.toggle('goal-done',info.done);}
+    }
   }
   function tick() {
     if(!ctx)return;
@@ -174,7 +185,7 @@
     return `<h2 class="section-title">Writing progress</h2>
       <div class="grid three">
         <div class="card metric"><span class="metric-icon">✦</span><span class="number">${(today.wordsAdded||0).toLocaleString()}</span><small>Words added today</small></div>
-        <div class="card metric"><span class="metric-icon">◷</span><span class="number">${Math.floor((today.writingMs||0)/60000)}</span><small>Tracked minutes today</small></div>
+        <div class="card metric"><span class="metric-icon">◷</span><span class="number" data-live-today-minutes>${Math.floor((today.writingMs||0)/60000)}</span><small>Tracked minutes today</small></div>
         <div class="card metric"><span class="metric-icon">▤</span><span class="number">${started} / ${p.chapters.length}</span><small>Chapters with a draft started</small></div>
         <div class="card metric"><span class="metric-icon">✿</span><span class="number">${streak(p)}</span><small>Consecutive writing days</small></div>
         <div class="card metric"><span class="metric-icon">☼</span><span class="number">${weeklyDays} / 7</span><small>Days active in the last week</small></div>
@@ -190,7 +201,7 @@
           ${progressHtml(total-milestone.last,milestone.next-milestone.last)}
           <div class="small muted">${total.toLocaleString()} total · Next celebration at ${milestone.next.toLocaleString()} words</div>
           <div class="divider"></div>
-          <h3>Goals</h3><p>${esc(goalSummary(p))}</p>
+          <h3>Goals</h3><p data-live-goal-summary>${esc(goalSummary(p))}</p>
           <div><button class="btn btn-secondary btn-small" data-action="nav" data-view="goals">${p.goals.length?'Review goals':'Set a writing goal'}</button></div>
         </div>
       </div>
@@ -202,7 +213,7 @@
     return `<div class="item-card"><div class="item-head"><strong>${esc(g.title)}</strong>
       <div class="inline-actions"><span class="goal-status ${info.done?'goal-done':''}">${info.done?'✓ Reached':daily?'Daily goal':'Milestone'}</span>
       <button class="btn btn-danger btn-icon" data-action="progress-remove-goal" data-id="${esc(g.id)}" aria-label="Remove goal" title="Remove goal">×</button></div></div>
-      <div class="small muted">${esc(info.label)}</div>
+      <div class="small muted" data-goal-live="${esc(g.id)}">${esc(info.label)}</div>
       <div style="margin-top:10px">${progressHtml(info.value,info.target)}</div>
       ${!daily?`<button class="btn btn-secondary btn-small" style="margin-top:12px" data-action="progress-toggle-goal" data-id="${esc(g.id)}">${info.done?'Mark unfinished':'Mark complete'}</button>`:''}
     </div>`;

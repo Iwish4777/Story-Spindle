@@ -238,3 +238,6 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .timer-strip strong{font-size:13px}
 .writer-word-count{text-align:right;margin-left:auto;color:var(--green-dark);font-weight:650;font-variant-numeric:tabular-nums}
 @media(max-width:630px){.progress-panels{grid-template-columns:1fr}.writer-status{flex-wrap:wrap}.writer-word-count{width:100%;text-align:right}}
+
+/* Ensure optional numerical target is hidden for one-time goals. */
+.field[hidden]{display:none!important}
