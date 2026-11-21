@@ -213,3 +213,12 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   html { scroll-behavior: auto; }
   *, *:before, *:after { transition-duration: .01ms !important; }
 }
+
+/* Word counts and the AI-free Strings notebook. */
+.word-total{padding:12px 16px;margin:-5px 0 15px;background:#f1f4eb;border:1px solid var(--line);border-radius:11px;font-size:13px;color:var(--green-dark)}
+.word-total strong{font-size:17px}
+.string-pair{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:#fff;margin:10px 0}
+.string-pair-snippets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:9px}
+.string-pair-snippets>div{padding:12px;border-radius:9px;background:#f3f5ef;min-width:0;overflow-wrap:anywhere;line-height:1.55;font:italic 14px/1.55 Georgia,serif}
+.string-pair-bottom{display:flex;justify-content:space-between;align-items:center;gap:13px;flex-wrap:wrap;margin-top:12px}
+@media(max-width:630px){.string-pair-snippets{grid-template-columns:1fr}}

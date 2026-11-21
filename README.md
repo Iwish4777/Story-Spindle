@@ -1,11 +1,9 @@
-# Story-Spindle
-Writing workshop
-README
+# Story Spindle
 # Story Spindle — Weave the threads of your story
 
 **Story Spindle** is a browser-based, entirely AI-free workspace for developing and writing a novel. This themed release incorporates the supplied vintage spinning-wheel banner and complements it with parchment, warm walnut, bronze, and ink-inspired colors.
 
-The app includes plot planning, character profiles, a worldbuilding encyclopedia, story ending, themes, chapter outlines, a manuscript editor, guided exercises, and rule-based continuity checks. It uses plain HTML, CSS, and JavaScript: **no AI, machine learning, third-party scripts, trackers, accounts, or network requests**.
+The app includes plot planning, character profiles, a worldbuilding encyclopedia, story ending, themes, chapter outlines, a manuscript editor, a word parking lot, a Strings inspiration notebook with rule-based pairing suggestions, guided exercises, and rule-based continuity checks. It uses plain HTML, CSS, and JavaScript: **no AI, machine learning, third-party scripts, trackers, accounts, or network requests**.
 
 ## Open the app
 
@@ -42,6 +40,13 @@ Story Spindle currently saves automatically into **this browser's `localStorage`
 
 This is a functional prototype, not a production-hardened manuscript storage system. Keep independent copies of anything you value.
 
+## Writing tools added in November 2026
+
+- **Live manuscript word counts:** Each chapter's count is displayed in the chapter outline and Writing desk. The Writing desk shows the overall manuscript total, updating as you type; Overview also shows the total. Only chapter `manuscript` fields are counted. Chapter titles, plot/outline notes, and any future separately stored table of contents or other front matter do not enter the total. If you manually type a heading or table of contents into a chapter manuscript box, it counts as manuscript text because the app cannot reliably guess the author's intent.
+- **Word parking lot:** Each novel has a separate list of intriguing words or short expressions with definition and notes. The app counts exact case-insensitive matches in drafted manuscript text to help you find where a word has been used, but does not judge whether a use was intentional.
+- **Strings:** Store brief snippets, freeform notes, and comma-separated tags. Manually link any two Strings and record connection notes. The "Possible pairings" section surfaces common tags and significant words; "Unexpected pairing" gives you unlinked, non-overlapping snippets to consider. No semantic inference, AI, or text generation is involved.
+- All three features are per-project and included in local autosave and JSON backup/import. Previously saved projects are upgraded in place when loaded, preserving old sections and content.
+
 ## What the AI-free continuity checker checks
 
 - Chapter sequence and numeric story-day ordering, with flashback exceptions.
@@ -56,6 +61,7 @@ It cannot reliably interpret unrestricted prose. Every result is a **possible** 
 
 - `index.html` — app shell
 - `app.js` — data, screens, guided exercises, rule-based checks, saves, imports, exports
+- `spindle-features.js` — Word parking lot, Strings, and deterministic pairing suggestions
 - `styles.css` — responsive design
 - `assets/story-spindle-banner.jpg` — supplied banner
 - `assets/spindle-mark.PNG` — user-supplied PNG brand icon
