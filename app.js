@@ -5,7 +5,7 @@ const STORAGE_KEY = 'story-studio.v1';
 const NAV = [
   ['dashboard','⌂','Overview'],['plot','◇','Plot'],['main','♙','Main characters'],['world','◈','Worldbuilding'],
   ['other','♧','Other characters'],['ending','⚑','Ending'],['themes','✿','Themes'],['chapters','▤','Chapter outlines'],
-  ['writing','✎','Writing'],['continuity','◎','Continuity checks'],['settings','⚙','Project & backup']
+  ['writing','✎','Writing'],['goals','◷','Goals'],['wordbank','✦','Word parking lot'],['strings','⌁','Strings'],['continuity','◎','Continuity checks'],['settings','⚙','Project & backup']
 ];
 const WORLD_CATEGORIES = ['Geography & lands','Cultures & societies','Science & nature','Magic & technology','History & politics','Creatures & ecology','Other'];
 const GUIDES = {
@@ -68,10 +68,10 @@ const makeId = () => (typeof crypto !== 'undefined' && crypto.randomUUID ? crypt
 const defaultProject = (name='Untitled novel') => ({
  id:makeId(),title:name,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),
  plot:{status:'unsure',summary:'',events:[]},mainCharacters:[],world:[],supportingCharacters:[],
- ending:{summary:'',openThreads:''},themes:[],chapters:[],revelations:[],customChecks:[],exerciseNotes:{},
+ ending:{summary:'',openThreads:''},themes:[],chapters:[],revelations:[],customChecks:[],wordBank:[],strings:[],stringLinks:[],goals:[],writingActivity:{},writingTimer:{running:false,lastTickAt:null},exerciseNotes:{},
 });
 const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-const countWords = str => (String(str || '').trim().match(/\S+/g)||[]).length;
+const countWords = str => (String(str || '').match(/[\p{L}\p{N}]+(?:[’'-][\p{L}\p{N}]+)*/gu)||[]).length;
 const options = (pairs,selected) => pairs.map(([value,label])=>`<option value="${esc(value)}" ${String(value)===String(selected)?'selected':''}>${esc(label)}</option>`).join('');
 const allCharacters = project => [...project.mainCharacters,...project.supportingCharacters];
 const chapterLabel = (project,id) => {const i=project.chapters.findIndex(c=>c.id===id);return i<0?'Not selected':`Chapter ${i+1}: ${project.chapters[i].title||'Untitled'}`;};
@@ -82,6 +82,7 @@ function toast(message){toastElement.textContent=message;toastElement.classList.
 let store;
 try { const raw=localStorage.getItem(STORAGE_KEY); store=raw?JSON.parse(raw):null; } catch(e) { store=null; }
 if(!store || !Array.isArray(store.projects) || !store.projects.length) {const p=defaultProject();store={version:1,activeId:p.id,projects:[p]};}
+for(const p of store.projects){SpindleFeatures.ensureProject(p);SpindleProgress.ensureProject(p);}
 let activeView='dashboard';let selectedChapterId=null;let continuityResults=null;let storageError=false;
 const project = () => store.projects.find(p=>p.id===store.activeId) || store.projects[0];
 function save(){project().updatedAt=new Date().toISOString();try{localStorage.setItem(STORAGE_KEY,JSON.stringify(store));storageError=false;const el=document.getElementById('save-status');if(el)el.textContent='✓ Saved locally';}catch(e){storageError=true;const el=document.getElementById('save-status');if(el)el.textContent='⚠ Storage full';toast('Browser storage is unavailable or full. Export a backup immediately.');}}
@@ -98,6 +99,8 @@ function newItem(path){
  case 'chapters':return {...core,title:'',location:'',majorEvent:'',theme:'',outcome:'',storyDay:'',isFlashback:false,characterIds:[],knowledgeUses:[],manuscript:''};
  case 'revelations':return {...core,title:'',characterId:'',learnedChapterId:'',notes:''};
  case 'customChecks':return {...core,phrase:'',replacement:'',enabled:true};
+ case 'wordBank':return {...core,word:'',meaning:'',usage:''};
+ case 'strings':return {...core,text:'',tags:'',notes:''};
  default:throw new Error('Unknown collection');
  }
 }
@@ -138,8 +141,12 @@ function dashboard(p){
  ['world','◈','Build the world','Keep places, cultures, science, and rules together.'],
  ['chapters','▤','Plan chapters','Outline scenes and track your story’s chronology.'],
  ['writing','✎','Write the manuscript','Draft in a distraction-light, chapter-linked editor.'],
- ['continuity','◎','Check continuity','Run transparent, rule-based checks without AI.']
+ ['continuity','◎','Check continuity','Run transparent, rule-based checks without AI.'],
+ ['wordbank','✦','Park interesting words','Collect words you want to weave into your manuscript.'],
+ ['strings','⌁','Gather your strings','Capture sparks and discover connections between them.'],
+ ['goals','◷','Set writing goals','Choose daily targets or creative milestones.']
  ].map(([key,icon,title,desc])=>`<button class="link-card" data-action="nav" data-view="${key}"><span style="font-size:23px">${icon}</span><span class="title">${title}</span><span class="description">${desc}</span></button>`).join('')}</div>
+ ${SpindleProgress.dashboardWidgets(p,{esc})}
  <div class="info" style="margin-top:19px"><strong>Private by design.</strong> Your work is saved in this browser, not on a server. Export regular backups from Project & backup. The app has no AI features, accounts, analytics, or outside connections.</div>
  </section>`;
 }
@@ -199,10 +206,12 @@ function writingPage(p){
  if(!p.chapters.length)return `<section class="page">${heading('Your manuscript','Writing','Draft each chapter in a simple editor linked directly to its outline.',guideButton('writing'))}${emptyState('Make room for the story','Create a chapter outline first, then your writing desk will be ready.')}<div style="margin-top:14px"><button class="btn" data-action="add-and-write">＋ Create first chapter</button></div></section>`;
  let c=p.chapters.find(c=>c.id===selectedChapterId)||p.chapters[0];selectedChapterId=c.id;const index=p.chapters.findIndex(x=>x.id===c.id);
  return `<section class="page">${heading('Your manuscript','Writing desk','Your words remain yours. Draft by chapter; everything autosaves locally.',guideButton('writing'))}
- <div class="writing-layout"><div class="chapter-index"><h3>CHAPTERS</h3>${p.chapters.map((ch,i)=>`<button class="chapter-choice ${ch.id===c.id?'selected':''}" data-action="select-chapter" data-id="${ch.id}">Chapter ${i+1}<span>${esc(ch.title||'Untitled chapter')} · ${countWords(ch.manuscript)} words</span></button>`).join('')}<button class="btn btn-secondary btn-small" style="margin:9px 5px 3px" data-action="add-and-write">＋ Chapter</button></div>
+ <div class="word-total">Complete manuscript: <strong id="manuscript-total-words">${p.chapters.reduce((sum,ch)=>sum+countWords(ch.manuscript),0).toLocaleString()}</strong> words <span class="muted small">· Chapter drafts only; titles and outlines excluded</span></div>
+ ${SpindleProgress.timerControl(p)}
+ <div class="writing-layout"><div class="chapter-index"><h3>CHAPTERS</h3>${p.chapters.map((ch,i)=>`<button class="chapter-choice ${ch.id===c.id?'selected':''}" data-action="select-chapter" data-id="${ch.id}">Chapter ${i+1}<span data-chapter-word-count="${esc(ch.id)}">${esc(ch.title||'Untitled chapter')} · ${countWords(ch.manuscript)} words</span></button>`).join('')}<button class="btn btn-secondary btn-small" style="margin:9px 5px 3px" data-action="add-and-write">＋ Chapter</button></div>
  <div class="card writer"><div class="eyebrow">CHAPTER ${index+1} OF ${p.chapters.length}</div><input class="writer-title" aria-label="Chapter title" placeholder="Untitled chapter" data-list="chapters" data-id="${c.id}" data-key="title" value="${esc(c.title)}"><div class="divider" style="margin:7px 0"></div>
  <textarea data-list="chapters" data-id="${c.id}" data-key="manuscript" id="manuscript-editor" aria-label="Chapter manuscript" placeholder="Begin your chapter here…" spellcheck="true">${esc(c.manuscript)}</textarea>
- <div class="writer-status"><span id="writer-word-count">${countWords(c.manuscript)} words · ${c.manuscript.length} characters</span><span>Autosaved locally · No AI</span></div>
+ <div class="writer-status"><span>Autosaved locally · No AI</span><span id="writer-word-count" class="writer-word-count">Chapter: ${countWords(c.manuscript).toLocaleString()} words · Manuscript: ${p.chapters.reduce((sum,ch)=>sum+countWords(ch.manuscript),0).toLocaleString()} words · ${c.manuscript.length.toLocaleString()} characters</span></div>
  <div class="inline-actions" style="margin-top:12px"><button class="btn btn-secondary btn-small" data-action="nav" data-view="chapters">View chapter outline</button><button class="btn btn-secondary btn-small" data-action="continuity-for-chapter" data-id="${c.id}">◎ Check continuity</button></div></div></div></section>`;
 }
 function revelationCard(p,r,i){const characters=allCharacters(p).filter(c=>c.name.trim());return `<div class="item-card">${itemHead(r.title||`Knowledge milestone ${i+1}`,'revelations',r.id,i+1)}<div class="stack">
@@ -232,7 +241,8 @@ function settingsPage(p){return `<section class="page">${heading('Ownership & co
  <div class="card stack" style="margin-top:16px"><h3>Privacy & AI-free guarantee</h3><p>Runs locally in your browser with plain JavaScript. No generative AI, machine learning, AI APIs, third-party code, account registration, analytics, or server-side manuscript processing. Continuity checks use deterministic code and simple word patterns.</p><h3>Project controls</h3><div class="inline-actions"><button class="btn btn-secondary" data-action="new-project">＋ Start another novel</button><button class="btn btn-danger" data-action="delete-project">Delete current project</button></div></div>
  </section>`;}
 function render(){const p=project();renderNav();renderSwitcher();document.getElementById('save-status').textContent=storageError?'⚠ Storage full':'✓ Saved locally';
- const pages={dashboard,plot:plotPage,main:p=>charactersPage(p,true),world:worldPage,other:p=>charactersPage(p,false),ending:endingPage,themes:themesPage,chapters:chapterPage,writing:writingPage,continuity:continuityPage,settings:settingsPage};
+ const extras={esc,heading,itemField,itemHead,addButton,emptyState,options};
+ const pages={dashboard,plot:plotPage,main:p=>charactersPage(p,true),world:worldPage,other:p=>charactersPage(p,false),ending:endingPage,themes:themesPage,chapters:chapterPage,writing:writingPage,wordbank:p=>SpindleFeatures.wordBankPage(p,extras),strings:p=>SpindleFeatures.stringsPage(p,extras),goals:p=>SpindleProgress.goalsPage(p,extras),continuity:continuityPage,settings:settingsPage};
  document.getElementById('main-content').innerHTML=(pages[activeView]||dashboard)(p);
 }
 function tokenizeSentences(text){return String(text||'').split(/(?<=[.!?])\s+|\n+/g).filter(Boolean);}
@@ -297,19 +307,20 @@ function exportManuscript(){const p=project();const text=`${p.title}\n${'='.repe
 function normalizeProject(raw){
  if(!raw || typeof raw!=='object' || Array.isArray(raw) || !('plot' in raw) || !('chapters' in raw))throw new Error('File does not look like a Story Studio project.');
  const p={...defaultProject(),...raw};p.id=makeId();p.title=String(p.title||'Imported novel')+' (imported)';
- const defaults=defaultProject();for(const key of ['mainCharacters','world','supportingCharacters','themes','chapters','revelations','customChecks']){if(!Array.isArray(p[key]))p[key]=[];}
+ const defaults=defaultProject();for(const key of ['mainCharacters','world','supportingCharacters','themes','chapters','revelations','customChecks','wordBank','strings','stringLinks','goals']){if(!Array.isArray(p[key]))p[key]=[];}
  p.plot={...defaults.plot,...p.plot};if(!Array.isArray(p.plot.events))p.plot.events=[];
  p.ending={...defaults.ending,...p.ending};p.exerciseNotes=p.exerciseNotes&&typeof p.exerciseNotes==='object'?p.exerciseNotes:{};
  for(const c of p.chapters){if(!c.id)c.id=makeId();if(!Array.isArray(c.characterIds))c.characterIds=[];if(!Array.isArray(c.knowledgeUses))c.knowledgeUses=[];if(typeof c.manuscript!=='string')c.manuscript='';}
+ SpindleFeatures.ensureProject(p);SpindleProgress.ensureProject(p);
  return p;
 }
-async function importFile(file){if(!file)return;try{if(file.size>30*1024*1024)throw new Error('Backup exceeds 30 MB.');const parsed=JSON.parse(await file.text());const raws=parsed.project?[parsed.project]:(Array.isArray(parsed.projects)?parsed.projects:[]);if(!raws.length)throw new Error('No project was found in that file.');const imported=raws.map(normalizeProject);store.projects.push(...imported);store.activeId=imported[0].id;activeView='dashboard';continuityResults=null;selectedChapterId=null;save();render();toast(imported.length===1?`Imported “${imported[0].title}”.`:`Imported ${imported.length} novels.`);}catch(err){toast('Import failed: '+err.message);}finally{document.getElementById('import-input').value='';}}
-function changeProject(id){if(!store.projects.some(p=>p.id===id))return;store.activeId=id;activeView='dashboard';selectedChapterId=null;continuityResults=null;save();render();window.scrollTo({top:0});}
+async function importFile(file){if(!file)return;try{if(file.size>30*1024*1024)throw new Error('Backup exceeds 30 MB.');const parsed=JSON.parse(await file.text());const raws=parsed.project?[parsed.project]:(Array.isArray(parsed.projects)?parsed.projects:[]);if(!raws.length)throw new Error('No project was found in that file.');const imported=raws.map(normalizeProject);SpindleProgress.pauseForProjectChange(project());store.projects.push(...imported);store.activeId=imported[0].id;activeView='dashboard';continuityResults=null;selectedChapterId=null;save();render();toast(imported.length===1?`Imported “${imported[0].title}”.`:`Imported ${imported.length} novels.`);}catch(err){toast('Import failed: '+err.message);}finally{document.getElementById('import-input').value='';}}
+function changeProject(id){if(!store.projects.some(p=>p.id===id))return;SpindleProgress.pauseForProjectChange(project());store.activeId=id;activeView='dashboard';selectedChapterId=null;continuityResults=null;save();render();window.scrollTo({top:0});}
 function runScan(chapterId=null){continuityResults=scan(project());if(chapterId){continuityResults=continuityResults.filter(x=>x.chapterId===chapterId);}activeView='continuity';render();document.getElementById('scan-results')?.scrollIntoView({behavior:'smooth',block:'start'});}
-function action(a,elem){const p=project();switch(a){
+function action(a,elem){const p=project();if(SpindleProgress.handleAction(a,elem,p))return;if(SpindleFeatures.handleAction(a,elem,p,{save,render,toast,makeId}))return;switch(a){
  case 'nav':activeView=elem.dataset.view;continuityResults=null;render();window.scrollTo({top:0});break;
  case 'add':{const path=elem.dataset.path;const entry=newItem(path);list(p,path).push(entry);if(path==='chapters')selectedChapterId=entry.id;continuityResults=null;save();render();break;}
- case 'remove':{const path=elem.dataset.path,id=elem.dataset.id;const items=list(p,path);const x=items.findIndex(it=>it.id===id);if(x===-1)return;if(!confirm('Remove this entry? This cannot be undone unless you have a backup.'))return;items.splice(x,1);if(path==='chapters' && selectedChapterId===id)selectedChapterId=null;continuityResults=null;save();render();break;}
+ case 'remove':{const path=elem.dataset.path,id=elem.dataset.id;const items=list(p,path);const x=items.findIndex(it=>it.id===id);if(x===-1)return;if(!confirm('Remove this entry? This cannot be undone unless you have a backup.'))return;items.splice(x,1);if(path==='strings')p.stringLinks=p.stringLinks.filter(link=>link.a!==id && link.b!==id);if(path==='chapters' && selectedChapterId===id)selectedChapterId=null;continuityResults=null;save();render();break;}
  case 'move':{const items=list(p,elem.dataset.path),i=items.findIndex(it=>it.id===elem.dataset.id),next=i+Number(elem.dataset.offset);if(i<0||next<0||next>=items.length)return;[items[i],items[next]]=[items[next],items[i]];continuityResults=null;save();render();break;}
  case 'guide':modalGuide(elem.dataset.guide);break;
  case 'close-guide':closeModal();break;
@@ -318,19 +329,20 @@ function action(a,elem){const p=project();switch(a){
  case 'add-and-write':{const c=newItem('chapters');p.chapters.push(c);selectedChapterId=c.id;activeView='writing';save();render();document.getElementById('manuscript-editor')?.focus();break;}
  case 'scan':runScan();break;
  case 'continuity-for-chapter':runScan(elem.dataset.id);break;
- case 'new-project':{const title=prompt('What is your new novel called?','Untitled novel');if(title===null)return;const np=defaultProject(title.trim()||'Untitled novel');store.projects.push(np);store.activeId=np.id;activeView='dashboard';selectedChapterId=null;continuityResults=null;save();render();toast('New novel created.');break;}
- case 'delete-project':{if(store.projects.length===1){toast('Create another project first, or export a backup before clearing data.');return;}if(!confirm(`Permanently delete “${p.title}” from this browser? Export a backup first if you want to preserve it.`))return;store.projects=store.projects.filter(x=>x.id!==p.id);store.activeId=store.projects[0].id;activeView='dashboard';selectedChapterId=null;continuityResults=null;save();render();break;}
+ case 'new-project':{const title=prompt('What is your new novel called?','Untitled novel');if(title===null)return;const np=defaultProject(title.trim()||'Untitled novel');SpindleProgress.pauseForProjectChange(project());store.projects.push(np);store.activeId=np.id;activeView='dashboard';selectedChapterId=null;continuityResults=null;save();render();toast('New novel created.');break;}
+ case 'delete-project':{if(store.projects.length===1){toast('Create another project first, or export a backup before clearing data.');return;}if(!confirm(`Permanently delete “${p.title}” from this browser? Export a backup first if you want to preserve it.`))return;SpindleProgress.pauseForProjectChange(p);store.projects=store.projects.filter(x=>x.id!==p.id);store.activeId=store.projects[0].id;activeView='dashboard';selectedChapterId=null;continuityResults=null;save();render();break;}
  case 'export-project':exportProject();break;
  case 'export-all':exportAll();break;
  case 'export-manuscript':exportManuscript();break;
  case 'import-project':document.getElementById('import-input').click();break;
  }}
 document.addEventListener('click',e=>{const target=e.target.closest('[data-action]');if(target && target.tagName!=='INPUT'){e.preventDefault();action(target.dataset.action,target);}if(e.target.classList.contains('modal-layer'))closeModal();});
-document.addEventListener('input',e=>{const target=e.target;if(target.dataset.exercise){project().exerciseNotes[target.dataset.exercise]=target.value;save();return;}if(!target.matches('[data-bind],[data-list]'))return;if(target.dataset.list){const obj=list(project(),target.dataset.list).find(x=>x.id===target.dataset.id);if(!obj)return;obj[target.dataset.key]=target.type==='checkbox'?target.checked:target.value;
-  if(target.dataset.key==='manuscript'){const wc=document.getElementById('writer-word-count');if(wc)wc.textContent=`${countWords(target.value)} words · ${target.value.length} characters`;}
+document.addEventListener('input',e=>{const target=e.target;if(target.dataset.exercise){project().exerciseNotes[target.dataset.exercise]=target.value;save();return;}if(!target.matches('[data-bind],[data-list]'))return;if(target.dataset.list){const obj=list(project(),target.dataset.list).find(x=>x.id===target.dataset.id);if(!obj)return;if(target.dataset.key==='manuscript')SpindleProgress.logManuscriptEdit(project(),obj.manuscript||'',target.value);
+  obj[target.dataset.key]=target.type==='checkbox'?target.checked:target.value;
+  if(target.dataset.key==='manuscript'){const wc=document.getElementById('writer-word-count');if(wc)wc.textContent=`Chapter: ${countWords(target.value).toLocaleString()} words · Manuscript: ${project().chapters.reduce((sum,ch)=>sum+countWords(ch.manuscript),0).toLocaleString()} words · ${target.value.length.toLocaleString()} characters`;SpindleFeatures.updateWritingCount(project(),target.dataset.id,countWords);}
  }else{setPath(project(),target.dataset.bind,target.value);if(target.dataset.bind==='title'){document.querySelector('.story-ribbon h1')?.replaceChildren(document.createTextNode(target.value));}}
  continuityResults=null;save();});
-document.addEventListener('change',e=>{const target=e.target;
+document.addEventListener('change',e=>{const target=e.target;SpindleProgress.handleChange(target);
  if(target.id==='project-select'){changeProject(target.value);return;}
  if(target.id==='import-input'){importFile(target.files[0]);return;}
  if(target.dataset.action==='toggle-ref'){const c=project().chapters.find(c=>c.id===target.dataset.chapter);if(!c)return;const collection=c[target.dataset.kind]||[];if(target.checked && !collection.includes(target.value))collection.push(target.value);else if(!target.checked)c[target.dataset.kind]=collection.filter(x=>x!==target.value);save();return;}
@@ -339,5 +351,6 @@ document.addEventListener('change',e=>{const target=e.target;
  if(target.dataset.bind){setPath(project(),target.dataset.bind,target.value);continuityResults=null;save();if(target.dataset.bind==='plot.status')render();}
  });
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+SpindleProgress.configure({project,projects:()=>store.projects,save,render,toast,makeId,countWords});
 render();
 })();

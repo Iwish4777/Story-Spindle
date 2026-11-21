@@ -1,11 +1,9 @@
-# Story-Spindle
-Writing workshop
-README
+# Story Spindle
 # Story Spindle — Weave the threads of your story
 
 **Story Spindle** is a browser-based, entirely AI-free workspace for developing and writing a novel. This themed release incorporates the supplied vintage spinning-wheel banner and complements it with parchment, warm walnut, bronze, and ink-inspired colors.
 
-The app includes plot planning, character profiles, a worldbuilding encyclopedia, story ending, themes, chapter outlines, a manuscript editor, guided exercises, and rule-based continuity checks. It uses plain HTML, CSS, and JavaScript: **no AI, machine learning, third-party scripts, trackers, accounts, or network requests**.
+The app includes plot planning, character profiles, a worldbuilding encyclopedia, story ending, themes, chapter outlines, a manuscript editor, a word parking lot, a Strings inspiration notebook with rule-based pairing suggestions, daily writing/activity tracking, customizable goals, guided exercises, and rule-based continuity checks. It uses plain HTML, CSS, and JavaScript: **no AI, machine learning, third-party scripts, trackers, accounts, or network requests**.
 
 ## Open the app
 
@@ -42,6 +40,23 @@ Story Spindle currently saves automatically into **this browser's `localStorage`
 
 This is a functional prototype, not a production-hardened manuscript storage system. Keep independent copies of anything you value.
 
+## Writing tools added in November 2026
+
+- **Live manuscript word counts:** Each chapter's count is displayed in the chapter outline and Writing desk. The Writing desk shows the overall manuscript total, updating as you type; Overview also shows the total. Only chapter `manuscript` fields are counted. Chapter titles, plot/outline notes, and any future separately stored table of contents or other front matter do not enter the total. If you manually type a heading or table of contents into a chapter manuscript box, it counts as manuscript text because the app cannot reliably guess the author's intent.
+- **Word parking lot:** Each novel has a separate list of intriguing words or short expressions with definition and notes. The app counts exact case-insensitive matches in drafted manuscript text to help you find where a word has been used, but does not judge whether a use was intentional.
+- **Strings:** Store brief snippets, freeform notes, and comma-separated tags. Manually link any two Strings and record connection notes. The "Possible pairings" section surfaces common tags and significant words; "Unexpected pairing" gives you unlinked, non-overlapping snippets to consider. No semantic inference, AI, or text generation is involved.
+- All three features are per-project and included in local autosave and JSON backup/import. Previously saved projects are upgraded in place when loaded, preserving old sections and content.
+
+## Progress dashboard and writing goals
+
+The homepage includes a dedicated manuscript word-count card, word/milestone progress, chapters with writing started, today's words added and tracked minutes, seven-day activity, consecutive-day streak, and a quick view of goals. Word-count badges on the Writing page sit at the bottom-right of the chapter editor with chapter, total manuscript, and character counts.
+
+Use **Goals** for built-in daily word targets (250/500/1000 words), writing-time targets (15/30/60 minutes), and creative milestones such as finishing a scene, improving dialogue, or planning a chapter. You can create a custom **daily word**, **daily time**, or **manual completion** goal. Daily goals refresh based on your device's local date; individual milestone goals stay checked when completed.
+
+- **Daily words added** is measured from positive whole-word changes to chapter manuscript fields in the current browser. It's not a historical word-count delta: deleting and retyping words may increase the activity count. Word counts in the manuscript themselves always reflect the actual current text.
+- **Writing time** is recorded only while the writer manually starts a timer and the browser tab is visible. The timer pauses if the tab is hidden, on closing the browser, or when switching novels. It may count pauses when the tab is visible because it cannot determine whether the writer is actively composing. Timed sessions are saved locally; automatically recorded time is rounded down to full minutes for display; the minute-based goal can complete as soon as its full target duration is reached. If a browser closes unexpectedly, up to a few seconds of unsaved timer time may be lost.
+- Activity history starts with this feature; **no past sessions are guessed**, and no cloud analytics or third-party tracking occurs. Use JSON backups to preserve goals and activity. As with the rest of Story Spindle, switching browsers or clearing site data can lose local progress.
+
 ## What the AI-free continuity checker checks
 
 - Chapter sequence and numeric story-day ordering, with flashback exceptions.
@@ -56,6 +71,8 @@ It cannot reliably interpret unrestricted prose. Every result is a **possible** 
 
 - `index.html` — app shell
 - `app.js` — data, screens, guided exercises, rule-based checks, saves, imports, exports
+- `spindle-features.js` — Word parking lot, Strings, and deterministic pairing suggestions
+- `spindle-progress.js` — Daily writing activity, manual timers, milestones, goal presets, and progress dashboard
 - `styles.css` — responsive design
 - `assets/story-spindle-banner.jpg` — supplied banner
 - `assets/spindle-mark.PNG` — user-supplied PNG brand icon

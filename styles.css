@@ -213,3 +213,31 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   html { scroll-behavior: auto; }
   *, *:before, *:after { transition-duration: .01ms !important; }
 }
+
+/* Word counts and the AI-free Strings notebook. */
+.word-total{padding:12px 16px;margin:-5px 0 15px;background:#f1f4eb;border:1px solid var(--line);border-radius:11px;font-size:13px;color:var(--green-dark)}
+.word-total strong{font-size:17px}
+.string-pair{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:#fff;margin:10px 0}
+.string-pair-snippets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:9px}
+.string-pair-snippets>div{padding:12px;border-radius:9px;background:#f3f5ef;min-width:0;overflow-wrap:anywhere;line-height:1.55;font:italic 14px/1.55 Georgia,serif}
+.string-pair-bottom{display:flex;justify-content:space-between;align-items:center;gap:13px;flex-wrap:wrap;margin-top:12px}
+@media(max-width:630px){.string-pair-snippets{grid-template-columns:1fr}}
+
+/* Progress dashboard and goals */
+.progress-panels{margin-top:16px}
+.goal-progress-track{height:10px;overflow:hidden;border-radius:999px;background:#e5eae0}
+.goal-progress-fill{height:100%;border-radius:inherit;background:#608a69;transition:width .2s}
+.goal-status{display:inline-block;font-size:11px;padding:4px 8px;color:#765d3b;background:#f7f0e5;border-radius:999px;white-space:nowrap}
+.goal-status.goal-done{color:#2e6650;background:#e7f2e8}
+.week-bars{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));height:160px;gap:9px;align-items:end}
+.week-bar-col{height:100%;display:flex;min-width:0;flex-direction:column;align-items:center;justify-content:end;gap:6px}
+.week-bar-area{height:110px;width:100%;max-width:46px;background:#f1f3ec;border-radius:7px 7px 2px 2px;display:flex;align-items:end;overflow:hidden}
+.week-bar{width:100%;background:#85a58e;border-radius:6px 6px 0 0}
+.week-bar-value{font-size:10px;color:var(--muted);white-space:nowrap}
+.timer-strip{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:12px 15px;background:#f2f5ee;border:1px solid var(--line);border-radius:12px;margin-bottom:15px}
+.timer-strip strong{font-size:13px}
+.writer-word-count{text-align:right;margin-left:auto;color:var(--green-dark);font-weight:650;font-variant-numeric:tabular-nums}
+@media(max-width:630px){.progress-panels{grid-template-columns:1fr}.writer-status{flex-wrap:wrap}.writer-word-count{width:100%;text-align:right}}
+
+/* Ensure optional numerical target is hidden for one-time goals. */
+.field[hidden]{display:none!important}
