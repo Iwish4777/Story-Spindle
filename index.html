@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5eee2">
+  <meta name="description" content="Story Spindle: an offline-friendly, entirely AI-free novel planning and writing studio.">
+  <title>Story Spindle — Weave the threads of your story</title>
+  <link rel="icon" type="image/svg+xml" href="assets/spindle-mark.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell" id="app">
+    <aside class="sidebar" aria-label="Main navigation">
+      <div class="sidebar-brand"><span class="brand-mark" aria-hidden="true"><img src="assets/spindle-mark.svg" alt=""></span><div><strong>Story Spindle</strong><small>Weave your story</small></div></div>
+      <div class="sidebar-label">THE WRITER’S DESK</div>
+      <nav id="sidebar-nav" aria-label="Sections"></nav>
+      <div class="sidebar-bottom"><span class="offline-dot" aria-hidden="true"></span><span>Crafted for human stories</span><small>Private to this browser unless exported</small></div>
+    </aside>
+    <div class="main-column">
+      <header class="topbar">
+        <div class="project-switcher"><label class="visually-hidden" for="project-select">Choose a project</label><select id="project-select"></select><button class="icon-btn" data-action="new-project" title="New novel project" aria-label="New novel project">＋</button></div>
+        <div class="topbar-right"><span id="save-status" class="save-status" role="status">Saved locally</span><button class="btn btn-secondary btn-small" data-action="export-project">↧ Back up</button></div>
+      </header>
+      <main id="main-content" tabindex="-1"></main>
+      <footer class="footer">Story Spindle · No AI, no account, no network requests. Your stories stay in this browser; back them up regularly.</footer>
+    </div>
+  </div>
+  <div id="modal-layer"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <input id="import-input" type="file" accept="application/json,.json" hidden>
+  <script src="app.js" defer></script>
+</body>
+</html>
