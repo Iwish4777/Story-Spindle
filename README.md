@@ -25,7 +25,7 @@ You can deploy the same files to GitHub Pages or another static host. No build p
 ## The design
 
 - `assets/story-spindle-banner.jpg`: the **original banner you supplied**, included as the dashboard's full-width visual (with no text overlay or forced crop).
-- `assets/spindle-mark.svg`: a simple local spinning-wheel mark for the sidebar and favicon.
+- `assets/spindle-mark.PNG`: your custom Story Spindle PNG icon used for the sidebar, browser favicon, and Apple touch icon.
 - `styles.css`: parchment backgrounds, walnut sidebar, bronze accents, high-contrast writing controls, and layouts for desktop/mobile.
 - Body and writing fonts use locally installed system fonts, not web font services.
 
@@ -58,7 +58,7 @@ It cannot reliably interpret unrestricted prose. Every result is a **possible** 
 - `app.js` — data, screens, guided exercises, rule-based checks, saves, imports, exports
 - `styles.css` — responsive design
 - `assets/story-spindle-banner.jpg` — supplied banner
-- `assets/spindle-mark.svg` — self-contained vector emblem
+- `assets/spindle-mark.PNG` — user-supplied PNG brand icon
 
 ## Future improvements
 
