@@ -93,6 +93,18 @@ Open **Map Studio** to create multiple editable illustrated maps for a story. Ch
 
 **Important limitation:** The map painter fills *closed regions*, including a freehand loop automatically closed on release. It does not infer an enclosed polygon from unrelated overlapping lines, detect geographic elevation, or automatically decide which biome belongs in each region. Those would be additional features rather than an unadvertised approximation.
 
+### Editable map shapes and full-screen mode
+
+Select any preset region, manually traced polygon, freehand region, road, river, trail, border, or other drawn line with the **Select / move** tool.
+
+- **Round handles** are editable vertices. Drag them to reshape coastlines, mountains, lakes, roads, rivers, or political borders.
+- **Square corner handles** resize the selected region or line. Place-name labels have a square handle for changing font size. The original Enlarge / Shrink buttons remain available.
+- Open the **Selected feature** panel to choose a vertex numerically, edit its X/Y position, or choose **Add point** and tap the selected feature to insert a new edge point. Use **Remove selected point** to delete one. Closed regions keep at least three vertices; lines keep at least two.
+- **Fewer points** simplifies dense hand-drawn shapes. Every region also has a **Smooth outline** checkbox. The Continent preset now starts with a smoother curved outline and 36 editable points rather than the older irregular 24-point polygon.
+- Tap **Full screen** to expand the editing workspace to the browser viewport. The **Tools** and **Details** panels open only when needed, floating above the canvas and closing independently. Tap **Exit full screen** or press Escape to return to the normal app layout. iOS may still display its device status bars; this is a full-viewport editor rather than a native iOS fullscreen API.
+- When building a polygon, a **Finish region** button appears on the map after three points so the tools panel can stay closed. Drawing a line, region or label automatically switches to Select mode, showing its editing controls.
+- Maps continue saving automatically in the active novel and remain included in JSON backups. All drawing and automatic terrain fills are AI-free.
+
 ## Story Trees — visual story connections
 
 **Story Trees** is a new app tab that automatically visualizes existing project structures as a network.

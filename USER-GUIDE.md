@@ -174,7 +174,11 @@ Sketch landforms, terrain patterns, borders and routes.
 3. For a polygon, tap at least three points and then choose Finish polygon. For a freehand region, trace its outline in one continuous drag.
 4. Select a region and choose up to three terrain types; adjust their relative ratio sliders for mixed illustrations.
 5. Use Draw line for roads, trails, rivers, political borders or travel routes. Use Place label for names.
-6. Select an existing shape to move, enlarge, shrink or delete it. Download your map as SVG or PNG.
+6. Choose Select / move, then tap any region or line. Drag round vertices to reshape it and square corner handles to resize. You can resize map labels using their square handle.
+7. Open Details to add a vertex along an edge, select a vertex to edit X/Y coordinates, remove a selected point, or simplify crowded outlines.
+8. Use Smooth outline for curved coasts. The Continent preset starts with a smoother shoreline and adjustable points.
+9. Tap Full screen for a larger map. Tools and Details are hidden until opened as floating panels, and Finish region appears on the map while drawing polygons.
+10. Download your finished map as SVG or PNG.
 
 - **Good to know:** Auto-fill works on a closed region or a preset shape. Separate intersecting lines are not automatically converted into regions.
 - **Good to know:** The maps are illustrated sketches, not geographic GIS maps.
