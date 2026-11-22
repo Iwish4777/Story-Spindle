@@ -140,7 +140,7 @@ const chapters=[
 ];
 const escape=s=>ctx?.esc?ctx.esc(String(s)):String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const groupOrder=[...new Set(chapters.map(t=>t.group))];
-const viewTopic={dashboard:'overview',plot:'plot',main:'characters',other:'characters',world:'world',ending:'plot',themes:'plot',chapters:'chapters',writing:'writing',wordbank:'wordbank',strings:'strings',trees:'trees',mood:'mood',maps:'maps',goals:'goals',continuity:'continuity',settings:'backups'};
+const viewTopic={dashboard:'getting-started',plot:'plot',main:'characters',other:'characters',world:'world',ending:'plot',themes:'plot',chapters:'chapters',writing:'writing',wordbank:'wordbank',strings:'strings',trees:'trees',mood:'mood',maps:'maps',goals:'goals',continuity:'continuity',settings:'backups'};
 const findTopic=id=>chapters.find(t=>t.id===id)||chapters[0];
 function markdown(){
  const out=['# Story Spindle — User Guide','','An AI-free writing and story-planning workspace. This guide explains the tools in plain language.','','**Quick reminder:** Projects autosave in your browser, not in GitHub or the cloud. Back up regularly.',''];
