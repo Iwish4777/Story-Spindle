@@ -247,7 +247,7 @@ async function searchStock(){
 function exportCredits(b){
  const photos=b.items.filter(i=>i.type==='image');
  const lines=[`Mood board: ${b.title}`,'Image and license references','',...photos.map((i,n)=>`${n+1}. ${i.credit||'Personal upload'}\nLicense: ${i.license||'Personal upload / check license'}\nSource: ${i.source||'Uploaded by board author'}`)];
- const blob=new Blob([lines.join('\\n\\n')],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob);
+ const blob=new Blob([lines.join('\n\n')],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob);
  const a=document.createElement('a');a.download=(b.title||'mood-board').replace(/[^a-z0-9-]/gi,'-').slice(0,60)+'-image-credits.txt';a.href=url;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2500);ctx.toast('Image credits downloaded.');
 }
 async function loadImage(src,remote){
