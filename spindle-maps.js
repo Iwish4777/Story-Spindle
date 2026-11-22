@@ -172,38 +172,69 @@ function mapSVG(m,forExport=false){
  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" ${forExport?'':'id="map-canvas" class="map-canvas" aria-label="Illustrated interactive fantasy map canvas"'}>${svgContent(m)}</svg>`;
 }
 function inspector(f){
- if(!f)return '<div class="empty"><strong>Select an element</strong>Use the Select tool to move and edit an existing feature.</div>';
+ if(!f)return '<div class="empty"><strong>Select an element</strong>Choose Select, then tap an area, line or label. Drag the round points to reshape or square corners to resize.</div>';
  const field=(name,key,value,type='text')=>`<div class="field"><label>${name}</label><input class="control" data-map-edit="${key}" type="${type}" value="${esc(value??'')}"></div>`;
  const select=(label,key,pairs,value)=>`<div class="field"><label>${label}</label><select class="control" data-map-edit="${key}">${opt(pairs,value)}</select></div>`;
- return `<div class="stack"><div class="inline-actions"><strong>${esc(f.title||'Map feature')}</strong><button class="btn btn-danger btn-small" data-action="map-delete-feature">Remove</button></div>
+ const isShape=!!f.points;
+ const canRemove=f.points?.length>(f.type==='region'?3:2);
+ const node=f.points?.[selectedPoint];
+ return `<div class="stack"><div class="inline-actions"><strong>${esc(f.title||'Map feature')}</strong><button class="btn btn-danger btn-small" data-action="map-delete-feature">Remove feature</button></div>
  ${field('Name / label','title',f.title)}
- ${f.type==='region'?`<p class="small muted">Combine up to three terrain types. The sliders are relative weights; Spindle automatically fills your closed region with their mixed textures.</p>
- ${[1,2,3].map(n=>`<div class="field-row">${select('Terrain '+n,'terrain'+n,terrains.map(x=>[x[0],x[1]]),f['terrain'+n])}<div class="field"><label>Ratio weight: <strong>${f['weight'+n]||0}</strong></label><input class="control" data-map-edit="weight${n}" type="range" min="0" max="100" step="5" value="${f['weight'+n]||0}"></div></div>`).join('')}
- <div class="inline-actions"><button class="btn btn-secondary btn-small" data-action="map-enlarge">Enlarge 10%</button><button class="btn btn-secondary btn-small" data-action="map-shrink">Shrink 10%</button></div>`:
+ ${isShape?`<div class="map-vertex-tools"><strong>Shape points & resizing</strong><p class="small muted">Tap a circular point to move it, or drag a square corner to resize. This works on every landmass, hand-drawn region, and line.</p>
+ <div class="inline-actions"><button type="button" class="btn btn-small ${pointInsertMode?'':'btn-secondary'}" data-action="map-add-point" aria-pressed="${pointInsertMode}">${pointInsertMode?'Tap border to add…':'+ Add point'}</button><button type="button" class="btn btn-secondary btn-small" data-action="map-remove-point" ${selectedPoint<0||!canRemove?'disabled':''}>Remove selected point</button></div>
+ <div class="field"><label for="map-point-select">Selected vertex</label><select class="control" id="map-point-select" data-map-point><option value="">Choose a point</option>${f.points.map((pt,i)=>`<option value="${i}" ${i===selectedPoint?'selected':''}>Point ${i+1} · ${Math.round(pt.x)}, ${Math.round(pt.y)}</option>`).join('')}</select></div>
+ ${node?`<div class="field-row"><div class="field"><label>X position</label><input type="number" class="control" data-map-coordinate="x" min="0" max="1000" value="${Math.round(node.x)}"></div><div class="field"><label>Y position</label><input type="number" class="control" data-map-coordinate="y" min="0" max="650" value="${Math.round(node.y)}"></div></div>`:''}
+ <div class="inline-actions"><button type="button" class="btn btn-secondary btn-small" data-action="map-enlarge">Enlarge 10%</button><button type="button" class="btn btn-secondary btn-small" data-action="map-shrink">Shrink 10%</button><button type="button" class="btn btn-secondary btn-small" data-action="map-simplify" ${f.points.length<8?'disabled':''}>Fewer points</button></div>
+ </div>`:''}
+ ${f.type==='region'?`<div class="field"><label class="toggle-row"><input type="checkbox" data-map-edit="smooth" ${f.smooth?'checked':''}>Smooth outline (curved coast)</label></div>
+ <p class="small muted">Mix up to three terrain types. Slider weights are relative; the map fills the closed region with their illustrated textures.</p>
+ ${[1,2,3].map(n=>`<div class="field-row">${select('Terrain '+n,'terrain'+n,terrains.map(x=>[x[0],x[1]]),f['terrain'+n])}<div class="field"><label>Ratio weight: <strong>${f['weight'+n]||0}</strong></label><input class="control" data-map-edit="weight${n}" type="range" min="0" max="100" step="5" value="${f['weight'+n]||0}"></div></div>`).join('')}`:
  f.type==='line'?`<div class="field-row">${select('Line type','style',lineKinds,f.style)}${field('Line width','width',f.width,'number')}</div>`:
- `<div class="field-row">${field('Font size','size',f.size,'number')}${field('Label color','color',f.color,'color')}</div>`}
- <p class="small muted">Choose Select, then drag an element to reposition it. Shapes can also be resized with Enlarge / Shrink.</p></div>`;
+ `<div class="field-row">${field('Font size','size',f.size,'number')}${field('Label color','color',f.color,'color')}</div><p class="small muted">Drag the square handle beside your label to change its size, or adjust the font size above.</p>`}
+ </div>`;
+}
+function toolHint(){
+ if(pointInsertMode)return 'Tap the selected shape or line to insert a new point along its edge.';
+ return tool==='polygon'?'Tap three or more border points, then Finish polygon.':
+ tool==='freehand'?'Drag continuously to trace a closed region.':
+ tool==='line'?'Drag a line to draw a road, river, trail or boundary.':
+ tool==='label'?'Tap the map to place a text label.':
+ 'Tap a feature to select it; move the round points or drag square corner handles to resize.';
 }
 function render(p,{heading}){
- ensure(p);const m=current(p),f=selected(m);
- return `<section class="page map-page">${heading('Sketch your geography','Map Studio','Create illustrated story maps on aged paper using freehand regions, preset landforms, terrain fills, routes, borders, and labels.')}
- <div class="card"><div class="card-top"><div><h3>Your story maps</h3><p>Build worlds, regional maps, journey sketches, or maps for individual scenes.</p></div><button class="btn btn-secondary btn-small" data-action="map-new">＋ New map</button></div>
- ${m?`<div class="mood-board-tabs">${p.storyMaps.map(x=>`<button class="btn btn-small ${x.id===m.id?'':'btn-ghost'}" data-action="map-choose" data-id="${esc(x.id)}">${esc(x.title)}</button>`).join('')}</div>
- <div class="field-row"><div class="field"><label>Map name</label><input class="control" data-map-title value="${esc(m.title)}"></div><div class="field"><label>Paper style</label><select class="control" data-map-paper>${opt(themePalette.map(x=>[x[0],x[1]]),m.paper)}</select></div></div>
- <div class="map-toolbar">
- ${[['select','Select / move'],['freehand','Draw region'],['polygon','Polygon points'],['line','Draw line'],['label','Place label']].map(([t,label])=>`<button class="btn btn-small ${tool===t?'':'btn-secondary'}" data-action="map-tool" data-tool="${t}">${label}</button>`).join('')}
- </div><div class="map-toolbar">
- <label class="small muted">Preset shapes:</label>
- ${[['ocean','Ocean base'],['island','Island'],['continent','Continent'],['peninsula','Peninsula'],['lake','Lake'],['archipelago','Archipelago'],['canyon','Canyon']].map(([v,t])=>`<button class="btn btn-secondary btn-small" data-action="map-preset" data-shape="${v}">${t}</button>`).join('')}
+ ensure(p);
+ const m=current(p),f=selected(m);
+ const toggle=focusMode?'✕ Exit full screen':'⛶ Full screen';
+ const tools=`<div class="map-editor-tools ${focusMode&&!toolsOpen?'is-collapsed':''}" id="map-editor-tools">
+ <div class="map-editor-tools-scroll">
+ <div class="mood-board-tabs">${p.storyMaps.map(x=>`<button class="btn btn-small ${x.id===m?.id?'':'btn-ghost'}" data-action="map-choose" data-id="${esc(x.id)}">${esc(x.title)}</button>`).join('')}</div>
+ <div class="field-row"><div class="field"><label>Map name</label><input class="control" data-map-title value="${esc(m?.title||'')}"></div><div class="field"><label>Paper style</label><select class="control" data-map-paper>${opt(themePalette.map(x=>[x[0],x[1]]),m?.paper)}</select></div></div>
+ <div class="map-toolbar">${[['select','Select / move'],['freehand','Draw region'],['polygon','Polygon points'],['line','Draw line'],['label','Place label']].map(([t,label])=>`<button class="btn btn-small ${tool===t?'':'btn-secondary'}" data-action="map-tool" data-tool="${t}">${label}</button>`).join('')}</div>
+ <div class="map-toolbar"><span class="small muted">Insert a shape:</span>
+ ${[['ocean','Ocean base'],['island','Island'],['continent','Continent'],['peninsula','Peninsula'],['lake','Lake'],['archipelago','Archipelago'],['canyon','Canyon']].map(([v,t])=>`<button class="btn btn-secondary btn-small" data-action="map-preset" data-shape="${v}">${t}</button>`).join('')}</div>
+ <div class="map-toolbar"><label class="small muted" for="map-line-kind">Line kind:</label><select id="map-line-kind" class="control map-line-select" data-map-line-style>${opt(lineKinds,lineStyle)}</select>
+ <button class="btn btn-secondary btn-small" data-action="map-finish-polygon" ${tool==='polygon'&&polygonPoints.length>=3?'':'disabled'}>Finish polygon (${polygonPoints.length})</button><button class="btn btn-secondary btn-small" data-action="map-cancel-drawing">Cancel drawing</button></div>
+ </div></div>`;
+ return `<section class="page map-page ${focusMode?'map-focus-mode':''}">${focusMode?'':heading('Sketch your geography','Map Studio','Create illustrated story maps with draggable points, terrain fills, and freehand drawing.')}
+ <div class="card map-editor-card">
+ <div class="map-editor-head"><div class="map-editor-heading"><h3>${focusMode?esc(m?.title||'Map Studio'):'Your story maps'}</h3>${focusMode?'<span class="small muted">Focus editing · Select a shape to adjust points</span>':'<p>Build worlds, regional maps, journey sketches or maps for individual scenes.</p>'}</div>
+ <div class="inline-actions map-editor-head-actions">
+ ${focusMode?`<button type="button" class="btn btn-secondary btn-small" data-action="map-toggle-tools" aria-expanded="${toolsOpen}" aria-controls="map-editor-tools">⚒ Tools</button><button type="button" class="btn btn-secondary btn-small" data-action="map-toggle-details" aria-expanded="${detailsOpen}" aria-controls="map-inspector">☷ Details</button>`:`<button class="btn btn-secondary btn-small" data-action="map-new">＋ New map</button>`}
+ <button class="btn btn-secondary btn-small" data-action="map-fullscreen" aria-pressed="${focusMode}">${toggle}</button>
+ </div></div>
+ ${m?`${tools}
+ <div class="map-workspace">
+  <div class="map-stage-column"><div class="map-stage-wrap" id="map-stage-wrap">${mapSVG(m)}<div class="map-stage-caption">${esc(toolHint())}</div></div>
+  <div class="inline-actions map-download-actions"><button class="btn btn-secondary btn-small" data-action="map-export-svg">↓ SVG</button><button class="btn btn-secondary btn-small" data-action="map-export-png">↓ PNG</button>${!focusMode?`<button class="btn btn-danger btn-small" data-action="map-delete">Delete map</button>`:''}</div>
+  </div>
+ <aside class="map-inspector ${focusMode&&!detailsOpen?'is-collapsed':''}" id="map-inspector"><h3>Selected feature</h3>${inspector(f)}
+ <div class="divider"></div><h3>Map features</h3>
+ ${m.features.length?`<div class="map-feature-list">${m.features.map(e=>`<button class="${e.id===selectedId?'active':''}" data-action="map-select-feature" data-id="${esc(e.id)}"><span>${esc(e.type==='region'?'▧':e.type==='line'?'∿':'T')}</span>${esc(e.title||e.type)}</button>`).join('')}</div>`:'<p class="small muted">This map is blank. Add a landmass or draw your first region.</p>'}
+ ${focusMode?`<button class="btn btn-danger btn-small" data-action="map-delete">Delete map</button><button class="btn btn-secondary btn-small" data-action="map-toggle-details">Hide panel</button>`:''}
+ </aside>
+ </div>`:`<div class="empty"><strong>The world is yours to draw</strong>Create a map to start with a parchment canvas.</div><button class="btn" data-action="map-new">＋ New map</button>`}
  </div>
- <div class="map-toolbar"><label class="small muted">Lines:</label><select class="control map-line-select" data-map-line-style>${opt(lineKinds,lineStyle)}</select>
- <button class="btn btn-secondary btn-small" data-action="map-finish-polygon" ${tool==='polygon'&&polygonPoints.length>=3?'':'disabled'}>Finish polygon (${polygonPoints.length} points)</button>
- <button class="btn btn-secondary btn-small" data-action="map-cancel-drawing">Cancel drawing</button></div>
- <div class="map-workspace"><div><div class="map-stage-wrap" id="map-stage-wrap">${mapSVG(m)}<div class="map-stage-caption"> ${esc(tool==='polygon'?'Tap points along the border, then Finish polygon.':tool==='freehand'?'Drag to trace a closed region.':tool==='line'?'Drag to draw a road, border, or river.':tool==='label'?'Tap the map to place a label.':'Drag existing features to move them. Choose a tool to draw.')} </div></div><div class="inline-actions" style="margin-top:12px"><button class="btn btn-secondary btn-small" data-action="map-export-svg">Download SVG map</button><button class="btn btn-secondary btn-small" data-action="map-export-png">Download PNG</button><button class="btn btn-danger btn-small" data-action="map-delete">Delete map</button></div></div>
- <aside class="map-inspector"><h3>Selected feature</h3>${inspector(f)}<div class="divider"></div><h3>Map features</h3>${m.features.length?`<div class="map-feature-list">${m.features.map(e=>`<button class="${e.id===selectedId?'active':''}" data-action="map-select-feature" data-id="${esc(e.id)}"><span>${esc(e.type==='region'?'▧':e.type==='line'?'∿':'T')}</span>${esc(e.title||e.type)}</button>`).join('')}</div>`:'<p class="small muted">This map is blank. Add a landmass or draw your first region.</p>'}</aside></div>
- `:`<div class="empty"><strong>The world is yours to draw</strong>Create a map to start with a parchment canvas.</div>`}
- </div>
- <div class="info" style="margin-top:17px"><strong>Terrain fills:</strong> Choose a preset landmass, trace a freehand closed region, or tap points to draw a polygon. Each new area is filled with a selected texture; select it to mix up to three biomes by ratio. Roads, rivers, and borders are lines, not automatic boundaries for enclosed-area detection. Everything is drawn with local vector shapes—no AI or geographic data is required.</div>
+ ${focusMode?'':`<div class="info" style="margin-top:17px"><strong>Editing shapes:</strong> Select any landform, drawn region, road or river to see adjustable points and corner resize handles. Use Details to add or remove points. A continent now has a gently curved outline. For an uncluttered workspace, open full screen and reveal Tools or Details only when needed. Terrain fills still require a closed region, not unrelated intersecting lines.</div>`}
  </section>`;
 }
 function editPointFromEvent(e){
