@@ -6,9 +6,9 @@ The app includes plot planning, character profiles, a worldbuilding encyclopedia
 
 ## Home-screen and app icons
 
-Story Spindle provides a real **180 × 180 PNG Apple touch icon** at `apple-touch-icon.png`, a standard `manifest.webmanifest`, and 192 × 192 and 512 × 512 PNG icons for other home-screen browsers. These icons use the spinning-wheel emblem already present in the repository's `spindle-mark.svg`; the original custom image `assets/spindle-mark.PNG` remains available as the site's favicon and in-app branding. The icon files have opaque parchment backgrounds to avoid fallback letter tiles.
+Story Spindle's home-screen icon uses the **user's own custom artwork** from `assets/spindle-mark.PNG`. The root `apple-touch-icon.png` is an exact copy of those image bytes, not the earlier generic `spindle-mark.svg` drawing. The web manifest and browser favicon also reference the user's custom artwork. For compatibility, this copy preserves the original source image dimensions rather than resizing it; iOS may scale or crop it within a home-screen tile. The original custom image remains used for in-app branding.
 
-The icon is linked from `index.html` with an Apple touch icon declaration. Both the icon and manifest paths are relative so they work on GitHub Pages project sites under a repository subdirectory. The web manifest uses standalone display mode.
+The custom icon is linked from `index.html` with an Apple touch icon declaration and cache-busted URLs. Both the icon and manifest paths are relative so they work on GitHub Pages project sites under a repository subdirectory. The web manifest uses standalone display mode.
 
 **Refreshing an existing iPhone home-screen icon:** Safari may keep the old letter tile even after the website changes. First, **export your current novel backup inside Spindle**, ideally save it to Files/iCloud. Then open the updated website directly in Safari and use Share → Add to Home Screen to create a fresh icon. Only after confirming your writing remains accessible should you consider removing the old shortcut. Removing a standalone web app may erase its own isolated browser storage, so keeping a backup is essential. If a newly installed icon has no novel data, import your JSON backup in **Project & backup**.
 
