@@ -4,11 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f5eee2">
-  <meta name="description" content="Story Spindle: an offline-friendly, entirely AI-free novel planning and writing studio.">
+  <meta name="description" content="Story Spindle: an AI-free novel planning, writing, mood board and map studio with optional openly licensed image search.">
   <title>Story Spindle — Weave the threads of your story</title>
   <link rel="icon" type="image/png" href="assets/spindle-mark.PNG">
   <link rel="apple-touch-icon" href="assets/spindle-mark.PNG">
-  <link rel="stylesheet" href="styles.css?v=20261121-trees">
+  <link rel="stylesheet" href="styles.css?v=20261122-visual">
 </head>
 <body>
   <div class="app-shell" id="app">
@@ -16,7 +16,7 @@
       <div class="sidebar-brand"><span class="brand-mark" aria-hidden="true"><img src="assets/spindle-mark.PNG" alt=""></span><div><strong>Story Spindle</strong><small>Weave your story</small></div></div>
       <div class="sidebar-label">THE WRITER’S DESK</div>
       <nav id="sidebar-nav" aria-label="Sections"></nav>
-      <div class="sidebar-bottom"><span class="offline-dot" aria-hidden="true"></span><span>Crafted for human stories</span><small>Private to this browser unless exported</small></div>
+      <div class="sidebar-bottom"><span class="offline-dot" aria-hidden="true"></span><span>Crafted for human stories</span><small>Writing stays in this browser unless exported</small></div>
     </aside>
     <div class="main-column">
       <header class="topbar">
@@ -24,7 +24,7 @@
         <div class="topbar-right"><span id="save-status" class="save-status" role="status">Saved locally</span><button class="btn btn-secondary btn-small" data-action="export-project">↧ Back up</button></div>
       </header>
       <main id="main-content" tabindex="-1"></main>
-      <footer class="footer">Story Spindle · No AI, no account, no network requests. Your stories stay in this browser; back them up regularly.</footer>
+      <footer class="footer">Story Spindle · No AI or account required. Creative image search uses Openverse only when requested. Stories save in this browser; back them up regularly.</footer>
     </div>
   </div>
   <div id="modal-layer"></div>
@@ -33,6 +33,8 @@
   <script src="spindle-features.js?v=20261121-goals" defer></script>
   <script src="spindle-progress.js?v=20261121-goals" defer></script>
   <script src="spindle-trees.js?v=20261121-trees" defer></script>
-  <script src="app.js?v=20261121-trees" defer></script>
+  <script src="spindle-mood.js?v=20261122-visual" defer></script>
+  <script src="spindle-maps.js?v=20261122-visual" defer></script>
+  <script src="app.js?v=20261122-visual" defer></script>
 </body>
 </html>
