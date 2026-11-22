@@ -93,7 +93,11 @@ const chapters=[
   "For a polygon, tap at least three points and then choose Finish polygon. For a freehand region, trace its outline in one continuous drag.",
   "Select a region and choose up to three terrain types; adjust their relative ratio sliders for mixed illustrations.",
   "Use Draw line for roads, trails, rivers, political borders or travel routes. Use Place label for names.",
-  "Select an existing shape to move, enlarge, shrink or delete it. Download your map as SVG or PNG."
+  "Choose Select / move, then tap any region or line. Drag round vertices to reshape it and square corner handles to resize. You can resize map labels using their square handle.",
+  "Open Details to add a vertex along an edge, select a vertex to edit X/Y coordinates, remove a selected point, or simplify crowded outlines.",
+  "Use Smooth outline for curved coasts. The Continent preset starts with a smoother shoreline and adjustable points.",
+  "Tap Full screen for a larger map. Tools and Details are hidden until opened as floating panels, and Finish region appears on the map while drawing polygons.",
+  "Download your finished map as SVG or PNG."
  ],tips:["Auto-fill works on a closed region or a preset shape. Separate intersecting lines are not automatically converted into regions.","The maps are illustrated sketches, not geographic GIS maps."]},
  {group:"Progress",id:"overview",title:"Read your overview",subtitle:"Your writing's progress without a complicated report.",view:"dashboard",steps:[
   "Tap Overview in the pinned bottom tab.",
