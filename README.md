@@ -1,9 +1,8 @@
-# Story Spindle
 # Story Spindle — Weave the threads of your story
 
 **Story Spindle** is a browser-based, entirely AI-free workspace for developing and writing a novel. This themed release incorporates the supplied vintage spinning-wheel banner and complements it with parchment, warm walnut, bronze, and ink-inspired colors.
 
-The app includes plot planning, character profiles, a worldbuilding encyclopedia, story ending, themes, chapter outlines, a manuscript editor, a word parking lot, a Strings inspiration notebook with rule-based pairing suggestions, a Story Trees visual connection explorer, daily writing/activity tracking, customizable goals, guided exercises, and rule-based continuity checks. It uses plain HTML, CSS, and JavaScript: **no AI, machine learning, third-party scripts, trackers, or accounts**. The optional Openverse image search and images selected from it use the internet; other features work locally.
+The app includes plot planning, character profiles, a worldbuilding encyclopedia, story ending, themes, chapter outlines, a manuscript editor, a word parking lot, a Strings inspiration notebook with rule-based pairing suggestions, a Story Trees visual connection explorer, Mood Boards, an illustrated Map Studio, daily writing/activity tracking, customizable goals, guided exercises, and rule-based continuity checks. It uses plain HTML, CSS, and JavaScript: **no AI, machine learning, third-party scripts, trackers, or accounts**. The optional Openverse image search and images selected from it use the internet; other features work locally.
 
 ## Open the app
 
@@ -47,6 +46,27 @@ This is a functional prototype, not a production-hardened manuscript storage sys
 - **Strings:** Store brief snippets, freeform notes, and comma-separated tags. Manually link any two Strings and record connection notes. The "Possible pairings" section surfaces common tags and significant words; "Unexpected pairing" gives you unlinked, non-overlapping snippets to consider. No semantic inference, AI, or text generation is involved.
 - All three features are per-project and included in local autosave and JSON backup/import. Previously saved projects are upgraded in place when loaded, preserving old sections and content.
 
+## Mood Boards — visual inspiration for your story
+
+Open **Mood Boards** to create multiple visual collages for a novel, specific characters, chapters, scenes, settings or anything else. Each board can be linked to a planning entry. Choose from 14 predefined gradient backgrounds, solid colors, or an uploaded background picture. Add movable/resizable photos, text blocks, and fabric-style swatches. Customize text using 17 locally installed/fallback system fonts plus font size, color, bold, italic, underline, shadow, outline color/weight, alignment and rotation. Swatches have colors and patterns including linen, woven, denim, stripes, plaid, dots, speckled, herringbone and floral designs.
+
+- Drag elements to reposition; drag the selected layer's lower-right handle to resize. Position, width, height, rotation and styling controls also provide a numerical alternative.
+- Add photos from your device (PNG, JPEG or WebP) or optionally search **Openverse**. The search uses its anonymous, free image API, and requires an internet connection. CC0-only is the default search filter; all Creative Commons results are another option. No paid API credentials or AI are used.
+- The creator, source, and license metadata of Openverse images is recorded. Download **image credits** alongside the board PNG for attribution/reference. You are responsible for checking the linked license, particularly before commercial use or publishing. Some licenses require attribution or sharing adaptations under the same license. A generated PNG does not embed the license notice.
+- Files uploaded from your device are converted to **compressed JPEG** (PNG transparency is flattened on white) and embedded in the saved project, so they are included in normal JSON backups. Images over 15 MB source size are rejected, and there is a conservative approximate 3.6 MB project JSON limit to reduce browser storage errors. Browsers may have lower limits or may clear site storage; the app checks for a failed save and rolls back failed uploads.
+- Openverse images are referenced by their remote HTTPS URLs and must be loaded online. Some hosts may block embedding or cross-origin PNG export: download a properly licensed copy to your device and upload it if needed, or use your own image.
+- **PNG export** creates a flattened copy of a collage; the editable board remains saved in the project.
+
+## Map Studio — illustrated parchment maps
+
+Open **Map Studio** to create multiple editable illustrated maps for a story. Choose an aged-paper backdrop, insert landform and water-area presets (island, continent, peninsula, lake, small islands, canyon), draw closed regions freehand, or tap polygon vertices and use **Finish polygon**. You can draw lines representing rivers, roads, trails, political borders, and travel routes, plus add place-name labels.
+
+- Each *closed region* automatically gets a decorative biome fill. Start with plains, then choose up to three terrain types and their **relative ratio weights** using sliders. The painter draws deterministic colored patches and icons in the region for ocean, lake, dunes, rocky desert, tundra, snow, rocky/forested/arctic mountains, canyons, beaches, forests, tropical, grassland, savanna, wetlands and volcanic features.
+- Select an element to move it; use Enlarge or Shrink for region shapes. Choose from several parchment backgrounds. Export an **SVG** or **PNG** map. SVG remains vector and can be opened in other vector drawing applications.
+- All maps save with the novel in browser storage and JSON backups. The drawing tools run locally without AI, map services, GIS, or third-party scripts.
+
+**Important limitation:** The map painter fills *closed regions*, including a freehand loop automatically closed on release. It does not infer an enclosed polygon from unrelated overlapping lines, detect geographic elevation, or automatically decide which biome belongs in each region. Those would be additional features rather than an unadvertised approximation.
+
 ## Story Trees — visual story connections
 
 **Story Trees** is a new app tab that automatically visualizes existing project structures as a network.
@@ -87,6 +107,8 @@ It cannot reliably interpret unrestricted prose. Every result is a **possible** 
 - `spindle-features.js` — Word parking lot, Strings, and deterministic pairing suggestions
 - `spindle-progress.js` — Daily writing activity, manual timers, milestones, goal presets, and progress dashboard
 - `spindle-trees.js` — Visual relationship map, deterministic auto-links, and saved custom connections
+- `spindle-mood.js` — Collage boards, fabric swatches, uploaded photos and opt-in Openverse search
+- `spindle-maps.js` — Terrain-filled parchment maps, freehand drawing and vector export
 - `styles.css` — responsive design
 - `assets/story-spindle-banner.jpg` — supplied banner
 - `assets/spindle-mark.PNG` — user-supplied PNG brand icon

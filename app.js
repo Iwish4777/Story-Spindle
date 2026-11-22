@@ -85,7 +85,7 @@ if(!store || !Array.isArray(store.projects) || !store.projects.length) {const p=
 for(const p of store.projects){SpindleFeatures.ensureProject(p);SpindleProgress.ensureProject(p);SpindleTrees.ensure(p);SpindleMood.ensure(p);SpindleMaps.ensure(p);}
 let activeView='dashboard';let selectedChapterId=null;let continuityResults=null;let storageError=false;
 const project = () => store.projects.find(p=>p.id===store.activeId) || store.projects[0];
-function save(){project().updatedAt=new Date().toISOString();try{localStorage.setItem(STORAGE_KEY,JSON.stringify(store));storageError=false;const el=document.getElementById('save-status');if(el)el.textContent='✓ Saved locally';}catch(e){storageError=true;const el=document.getElementById('save-status');if(el)el.textContent='⚠ Storage full';toast('Browser storage is unavailable or full. Export a backup immediately.');}}
+function save(){project().updatedAt=new Date().toISOString();try{localStorage.setItem(STORAGE_KEY,JSON.stringify(store));storageError=false;const el=document.getElementById('save-status');if(el)el.textContent='✓ Saved locally';return true;}catch(e){storageError=true;const el=document.getElementById('save-status');if(el)el.textContent='⚠ Storage full';toast('Browser storage is unavailable or full. Export a backup immediately.');return false;}}
 function getPath(obj,path){return path.split('.').reduce((a,b)=>a?.[b],obj);}
 function setPath(obj,path,val){const keys=path.split('.');const last=keys.pop();const target=keys.reduce((a,k)=>(a[k]??={}),obj);target[last]=val;}
 function list(p,path){return getPath(p,path) || [];}

@@ -105,7 +105,7 @@ function layerEditor(i,b){
 function stockHTML(){
  const status=stockStatus?`<p class="small muted">${esc(stockStatus)}</p>`:'';
  return `<div class="card mood-stock" style="margin-top:17px"><div class="card-top"><div><h3>Free image library: Openverse</h3><p>Optional online search. Some images require attribution; always check the source's license before publishing.</p></div></div>
- <div class="mood-stock-controls"><div class="field"><label>Search openly licensed images</label><input id="mood-stock-query" class="control" placeholder="e.g., misty forest, antique fabric" value="${esc(stockQuery)}"></div><div class="field"><label>License filter</label><select id="mood-stock-license" class="control">${opt([['cc0','CC0 / public domain'],['all','All Creative Commons licenses']],stockLicense)}</select></div><button class="btn btn-secondary" data-action="mood-stock-search" ${inFlight?'disabled':''}>${inFlight?'Searching…':'Search images'}</button></div>
+ <div class="mood-stock-controls"><div class="field"><label>Search openly licensed images</label><input id="mood-stock-query" class="control" placeholder="e.g., misty forest, antique fabric" value="${esc(stockQuery)}"></div><div class="field"><label>License filter</label><select id="mood-stock-license" class="control">${opt([['cc0','CC0 only'],['all','All Creative Commons licenses']],stockLicense)}</select></div><button class="btn btn-secondary" data-action="mood-stock-search" ${inFlight?'disabled':''}>${inFlight?'Searching…':'Search images'}</button></div>
  ${status}${stock.length?`<div class="mood-stock-results">${stock.map((s,i)=>`<div class="mood-stock-card"><img loading="lazy" src="${esc(secureImageUrl(s.thumbnail||s.url))}" alt="${esc(s.title)}"><div class="small"><strong>${esc(shorten(s.title,55))}</strong><span class="muted">${esc(s.license?.toUpperCase()||'License unknown')} · ${esc(shorten(s.creator||'Creator unknown',32))}</span></div><div class="inline-actions"><button class="btn btn-secondary btn-small" data-action="mood-stock-add" data-stock="${i}">Add</button><a target="_blank" rel="noopener noreferrer" href="${esc(secureImageUrl(s.foreign_landing_url||s.license_url||''))}">Source</a></div></div>`).join('')}</div>`:''}
  </div>`;
 }
@@ -117,7 +117,7 @@ function render(p,{heading}){
  ${p.moodBoards.length?`<div class="mood-board-tabs">${p.moodBoards.map(x=>`<button class="btn btn-small ${x.id===b?.id?'':'btn-ghost'}" data-action="mood-select-board" data-id="${esc(x.id)}">${esc(shorten(x.title,30))}</button>`).join('')}</div>`:''}
  ${!b?`<div class="empty"><strong>A blank canvas awaits</strong>Start a mood board to collect colors, imagery, and fragments of atmosphere.</div>`:`<div class="stack">
  <div class="field-row"><div class="field"><label>Board title</label><input class="control" data-mood-board="title" value="${esc(b.title)}"></div><div class="field"><label>Board type</label><select class="control" data-mood-board="kind">${opt(presetKinds.map(x=>[x,x]),b.kind)}</select></div></div>
- <div class="field-row"><div class="field"><label>Link to a story entry (optional)</label><select class="control" data-mood-board="linkedId">${selectBoardOptions(p,b.linkedId)}</select></div><div class="inline-actions" style="align-items:end"><button class="btn btn-danger btn-small" data-action="mood-delete-board">Delete board</button><button class="btn btn-secondary btn-small" data-action="mood-export-png">Export as PNG</button></div></div>
+ <div class="field-row"><div class="field"><label>Link to a story entry (optional)</label><select class="control" data-mood-board="linkedId">${selectBoardOptions(p,b.linkedId)}</select></div><div class="inline-actions" style="align-items:end"><button class="btn btn-danger btn-small" data-action="mood-delete-board">Delete board</button><button class="btn btn-secondary btn-small" data-action="mood-export-png">Export PNG</button><button class="btn btn-secondary btn-small" data-action="mood-export-credits">Download credits</button></div></div>
  <div class="mood-toolbar"><button class="btn btn-secondary btn-small" data-action="mood-add-text">＋ Text</button><button class="btn btn-secondary btn-small" data-action="mood-add-swatch">＋ Fabric swatch</button><button class="btn btn-secondary btn-small" data-action="mood-upload-photo">＋ Upload photo</button></div>
  <div class="mood-workspace"><div class="mood-stage-wrap"><div class="mood-stage" id="mood-stage" style="${backgroundStyle(b.background)}">${b.background.kind==='image'&&b.background.image?`<img class="mood-stage-bg" src="${esc(secureImageUrl(b.background.image))}" alt="">`:''}${b.items.map(layerHTML).join('')}</div><p class="small muted">Drag layers to move them. Tap or click one to customize it on the right.</p></div>
  <div class="mood-inspector"><div class="field"><label>Board background</label><select class="control" data-mood-background="kind">${opt([['gradient','Gradient'],['color','Solid color'],['image','Uploaded image']],b.background.kind)}</select></div>
@@ -157,6 +157,7 @@ function onAction(a,el,p){
   b.items.push(i);layerId=i.id;ctx.save();ctx.render();ctx.toast('Image added. Check its license before publishing.');
  }
  if(a==='mood-export-png'){exportPNG(p,b);return true;}
+ if(a==='mood-export-credits'){exportCredits(b);return true;}
  return true;
 }
 function onChange(el,p){
@@ -221,10 +222,12 @@ async function addUpload(file,p,b){
   const current=JSON.stringify(p).length;
   if(current+data.length>3_600_000){ctx.toast('This browser project is near its image-storage limit. Please back up and remove some pictures before adding more.');return;}
   const target=ctx.project().moodBoards.find(x=>x.id===b.id);if(!target)return;
+  const before=JSON.stringify(target);
   if(uploadMode==='mood-upload-background'){target.background.kind='image';target.background.image=data;}
   else if(uploadMode==='mood-replace-photo'){const currentItem=target.items.find(x=>x.id===layerId);if(currentItem){currentItem.url=data;currentItem.credit='Personal upload';currentItem.source='';currentItem.license='';}}
   else {const i=newItem('image',target);i.url=data;i.credit='Personal upload';target.items.push(i);layerId=i.id;}
-  ctx.save();ctx.render();ctx.toast('Image saved to this project. Back up your work regularly.');
+  if(ctx.save()===false){Object.assign(target,JSON.parse(before));ctx.toast('Storage is full. The photo was not added; export a backup and remove old images.');ctx.render();return;}
+  ctx.render();ctx.toast('Image saved to this project. Back up your work regularly.');
  }catch(e){ctx.toast('Unable to read that image. Try a smaller PNG or JPEG.');}
 }
 async function searchStock(){
@@ -240,6 +243,12 @@ async function searchStock(){
   stockStatus=stock.length?`Found ${stock.length} images. Review source and usage terms before publishing.`:'No matching images. Try another phrase.';
  }catch(e){stockStatus='Openverse search is unavailable right now. You can still upload images from your device or try again later.';}
  finally{inFlight=false;ctx.render();}
+}
+function exportCredits(b){
+ const photos=b.items.filter(i=>i.type==='image');
+ const lines=[`Mood board: ${b.title}`,'Image and license references','',...photos.map((i,n)=>`${n+1}. ${i.credit||'Personal upload'}\nLicense: ${i.license||'Personal upload / check license'}\nSource: ${i.source||'Uploaded by board author'}`)];
+ const blob=new Blob([lines.join('\\n\\n')],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob);
+ const a=document.createElement('a');a.download=(b.title||'mood-board').replace(/[^a-z0-9-]/gi,'-').slice(0,60)+'-image-credits.txt';a.href=url;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2500);ctx.toast('Image credits downloaded.');
 }
 async function loadImage(src,remote){
  return new Promise((resolve,reject)=>{
