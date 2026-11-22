@@ -154,7 +154,7 @@ function regionSVG(f){
 function lineSVG(f){
  const pts=f.points.map(p=>`${p.x},${p.y}`).join(' '),color=lineColors[f.style]||lineColors.road;
  const dash=f.style==='border'?'9 6':f.style==='trail'?'3 7':f.style==='route'?'10 4':'none';
- return `<g data-map-feature="${esc(f.id)}" class="map-feature ${selectedId===f.id?'map-selected':''}"><polyline points="${pts}" fill="none" stroke="#f1e6ce" stroke-width="${(f.width||3)+3}" stroke-linejoin="round" stroke-linecap="round"/><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="${selectedId===f.id?(f.width||3)+1.8:(f.width||3)}" stroke-dasharray="${dash}" stroke-linejoin="round" stroke-linecap="round"/></g>`;
+ return `<g data-map-feature="${esc(f.id)}" class="map-feature ${selectedId===f.id?'map-selected':''}"><polyline points="${pts}" fill="none" stroke="#f1e6ce" stroke-width="${(f.width||3)+3}" stroke-linejoin="round" stroke-linecap="round"/><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="${selectedId===f.id?(f.width||3)+1.8:(f.width||3)}" stroke-dasharray="${dash}" stroke-linejoin="round" stroke-linecap="round"/><polyline points="${pts}" fill="none" stroke="transparent" stroke-width="22" pointer-events="stroke" stroke-linejoin="round" stroke-linecap="round"/></g>`;
 }
 function svgContent(m){
  const theme=themePalette.find(x=>x[0]===m.paper)||themePalette[0];
@@ -207,7 +207,7 @@ function render(p,{heading}){
  const toggle=focusMode?'✕ Exit full screen':'⛶ Full screen';
  const tools=`<div class="map-editor-tools ${focusMode&&!toolsOpen?'is-collapsed':''}" id="map-editor-tools">
  <div class="map-editor-tools-scroll">
- <div class="mood-board-tabs">${p.storyMaps.map(x=>`<button class="btn btn-small ${x.id===m?.id?'':'btn-ghost'}" data-action="map-choose" data-id="${esc(x.id)}">${esc(x.title)}</button>`).join('')}</div>
+ <div class="mood-board-tabs">${focusMode?`<button class="btn btn-secondary btn-small" data-action="map-new">＋ New map</button>`:""}${p.storyMaps.map(x=>`<button class="btn btn-small ${x.id===m?.id?'':'btn-ghost'}" data-action="map-choose" data-id="${esc(x.id)}">${esc(x.title)}</button>`).join('')}</div>
  <div class="field-row"><div class="field"><label>Map name</label><input class="control" data-map-title value="${esc(m?.title||'')}"></div><div class="field"><label>Paper style</label><select class="control" data-map-paper>${opt(themePalette.map(x=>[x[0],x[1]]),m?.paper)}</select></div></div>
  <div class="map-toolbar">${[['select','Select / move'],['freehand','Draw region'],['polygon','Polygon points'],['line','Draw line'],['label','Place label']].map(([t,label])=>`<button class="btn btn-small ${tool===t?'':'btn-secondary'}" data-action="map-tool" data-tool="${t}">${label}</button>`).join('')}</div>
  <div class="map-toolbar"><span class="small muted">Insert a shape:</span>
@@ -224,7 +224,7 @@ function render(p,{heading}){
  </div></div>
  ${m?`${tools}
  <div class="map-workspace">
-  <div class="map-stage-column"><div class="map-stage-wrap" id="map-stage-wrap">${mapSVG(m)}<div class="map-stage-caption">${esc(toolHint())}</div></div>
+  <div class="map-stage-column"><div class="map-stage-wrap" id="map-stage-wrap">${mapSVG(m)}<div class="map-stage-caption">${esc(toolHint())}</div>${tool==='polygon'&&polygonPoints.length>=3?`<button class="btn map-quick-finish" data-action="map-finish-polygon">✓ Finish region (${polygonPoints.length} points)</button>`:''} </div>
   <div class="inline-actions map-download-actions"><button class="btn btn-secondary btn-small" data-action="map-export-svg">↓ SVG</button><button class="btn btn-secondary btn-small" data-action="map-export-png">↓ PNG</button>${!focusMode?`<button class="btn btn-danger btn-small" data-action="map-delete">Delete map</button>`:''}</div>
   </div>
  <aside class="map-inspector ${focusMode&&!detailsOpen?'is-collapsed':''}" id="map-inspector"><h3>Selected feature</h3>${inspector(f)}
@@ -342,10 +342,13 @@ function resizeFeature(f,scale){
 function onAction(a,el,p){
  if(!a.startsWith('map-'))return false;
  let m=current(p);
- if(a==='map-new')addMap(p);
- if(a==='map-choose'){activeId=el.dataset.id;selectedId='';polygonPoints=[];tool='select';ctx.render();}
- if(a==='map-delete'&&m&&confirm(`Delete map “${m.title}”?`)){p.storyMaps=p.storyMaps.filter(x=>x.id!==m.id);activeId=p.storyMaps[0]?.id||'';selectedId='';ctx.save();ctx.render();}
- if(a==='map-tool'){tool=el.dataset.tool;drawing=null;polygonPoints=[];ctx.render();}
+ if(a==='map-fullscreen'){focusMode=!focusMode;toolsOpen=false;detailsOpen=false;ctx.render();return true;}
+ if(a==='map-toggle-tools'){toolsOpen=!toolsOpen;if(toolsOpen)detailsOpen=false;ctx.render();return true;}
+ if(a==='map-toggle-details'){detailsOpen=!detailsOpen;if(detailsOpen)toolsOpen=false;ctx.render();return true;}
+ if(a==='map-new'){addMap(p);if(focusMode){toolsOpen=false;ctx.render();}}
+ if(a==='map-choose'){activeId=el.dataset.id;selectedId='';selectedPoint=-1;pointInsertMode=false;polygonPoints=[];tool='select';if(focusMode)toolsOpen=false;ctx.render();}
+ if(a==='map-delete'&&m&&confirm(`Delete map “${m.title}”?`)){p.storyMaps=p.storyMaps.filter(x=>x.id!==m.id);activeId=p.storyMaps[0]?.id||'';selectedId='';selectedPoint=-1;ctx.save();ctx.render();}
+ if(a==='map-tool'){tool=el.dataset.tool;drawing=null;polygonPoints=[];pointInsertMode=false;selectedPoint=-1;if(focusMode)toolsOpen=false;ctx.render();}
  if(a==='map-preset'&&m){
   const shape=el.dataset.shape;
   if(shape==='ocean'){
@@ -361,7 +364,7 @@ function onAction(a,el,p){
   }else{
    addRegion(m,presetPoints(shape),shape==='lake'?'lake':shape==='canyon'?'canyon':'plains',shape.charAt(0).toUpperCase()+shape.slice(1),shape==='continent');
   }
-  tool='select';
+  tool='select';if(focusMode)toolsOpen=false;ctx.render();
  }
  if(a==='map-finish-polygon'){
   if(polygonPoints.length>=3&&m)addRegion(m,[...polygonPoints],'plains','Polygon region');
@@ -369,8 +372,28 @@ function onAction(a,el,p){
   polygonPoints=[];tool='select';
  }
  if(a==='map-cancel-drawing'){drawing=null;polygonPoints=[];ctx.render();}
- if(a==='map-select-feature'){selectedId=el.dataset.id;tool='select';ctx.render();}
- if(a==='map-delete-feature'){if(selectedId&&m&&confirm('Remove this map feature?')){m.features=m.features.filter(x=>x.id!==selectedId);selectedId='';ctx.save();ctx.render();}}
+ if(a==='map-select-feature'){selectedId=el.dataset.id;selectedPoint=-1;pointInsertMode=false;tool='select';ctx.render();}
+ if(a==='map-delete-feature'){if(selectedId&&m&&confirm('Remove this map feature?')){m.features=m.features.filter(x=>x.id!==selectedId);selectedId='';selectedPoint=-1;pointInsertMode=false;ctx.save();ctx.render();}}
+ if(a==='map-add-point'){
+  const f=selected(m);if(!f?.points)return true;
+  tool='select';pointInsertMode=!pointInsertMode;ctx.render();
+  return true;
+ }
+ if(a==='map-remove-point'){
+  const f=selected(m),min=f?.type==='region'?3:2;
+  if(f?.points&&selectedPoint>=0&&f.points.length>min){
+   f.points.splice(selectedPoint,1);selectedPoint=-1;pointInsertMode=false;ctx.save();ctx.render();
+  }
+  return true;
+ }
+ if(a==='map-simplify'){
+  const f=selected(m);if(f?.points){
+   const simpler=simplifyLine(f.points,f.type==='region'?7:5);
+   if(simpler.length<f.points.length&&simpler.length>=(f.type==='region'?3:2)){
+    f.points=simpler;selectedPoint=-1;ctx.save();ctx.render();ctx.toast('Extra points reduced. You can add them back.');
+   }else ctx.toast('This outline is already simple enough.');
+  }return true;
+ }
  if(a==='map-enlarge'||a==='map-shrink'){
   const f=selected(m);if(f?.points){resizeFeature(f,a==='map-enlarge'?1.1:.9);ctx.save();ctx.render();}
  }
@@ -382,8 +405,16 @@ function onChange(el,p){
  if(el.dataset.mapTitle!==undefined){m.title=el.value;ctx.save();ctx.render();return true;}
  if(el.dataset.mapPaper!==undefined){m.paper=el.value;ctx.save();ctx.render();return true;}
  if(el.dataset.mapLineStyle!==undefined){lineStyle=el.value;return true;}
+ if(el.dataset.mapPoint!==undefined){
+  const f=selected(m);selectedPoint=el.value===''?-1:clamp(Number(el.value),0,(f?.points?.length||1)-1);ctx.render();return true;
+ }
+ if(el.dataset.mapCoordinate){
+  const f=selected(m),v=f?.points?.[selectedPoint];if(!v)return true;
+  v[el.dataset.mapCoordinate]=clamp(el.value,0,el.dataset.mapCoordinate==='x'?W:H);
+  ctx.save();ctx.render();return true;
+ }
  if(el.dataset.mapEdit){const f=selected(m);if(!f)return true;const k=el.dataset.mapEdit;
-  f[k]=['size','width'].includes(k)?Number(el.value):k.startsWith('weight')?Number(el.value):el.value;
+  f[k]=k==='smooth'?el.checked:['size','width'].includes(k)?Number(el.value):k.startsWith('weight')?Number(el.value):el.value;
   if(k==='size')f.size=clamp(f.size,12,76);
   if(k==='width')f.width=clamp(f.width,1,20);
   ctx.save();ctx.render();return true;
@@ -419,9 +450,13 @@ async function exportMap(m,png){
  }catch(e){ctx.toast('Map export was blocked by this browser. Try the SVG download.');}
 }
 function onKeydown(e){
- if(e.key==='Escape'&&(drawing||polygonPoints.length)){drawing=null;polygonPoints=[];ctx.render();return true;}return false;
+ if(e.key==='Escape'&&(drawing||polygonPoints.length||pointInsertMode)){
+  e.preventDefault?.();drawing=null;polygonPoints=[];pointInsertMode=false;ctx.render();return true;
+ }
+ if(e.key==='Escape'&&focusMode){e.preventDefault?.();focusMode=false;toolsOpen=false;detailsOpen=false;ctx.render();return true;}
+ return false;
 }
-function reset(){activeId='';selectedId='';tool='select';drawing=null;polygonPoints=[];}
+function reset(){activeId='';selectedId='';selectedPoint=-1;pointInsertMode=false;tool='select';drawing=null;polygonPoints=[];focusMode=false;toolsOpen=false;detailsOpen=false;}
 function configure(c){ctx=c;}
 window.SpindleMaps={configure,ensure,render,onAction,onInput,onChange,onPointerDown,onPointerMove,onPointerUp,onKeydown,reset,presetPoints,terrainMark,svgContent};
 })();
