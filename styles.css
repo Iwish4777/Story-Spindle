@@ -409,3 +409,52 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
  .help-dialog{max-height:calc(100dvh - 14px)}
  .help-layer{padding:7px}
 }
+
+/* Map Studio — direct vertex editing and focus-mode workspace. */
+.map-editor-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.map-editor-heading h3{margin:0 0 4px;font:normal 21px Georgia,serif;color:#593a28}
+.map-editor-heading p{margin:0;font-size:12px;color:var(--muted)}
+.map-editor-head-actions{margin-left:auto}
+.map-editor-tools{padding:6px 0 8px}
+.map-stage-wrap{position:relative}
+.map-stage-column{min-width:0}
+.map-stage-column>.map-download-actions{margin-top:12px}
+.map-handle-bounds{fill:none;stroke:#714631;stroke-width:2;stroke-dasharray:7 5;pointer-events:none}
+.map-resize-handle{fill:#fff3d8;stroke:#6c4832;stroke-width:2.5;cursor:nwse-resize;pointer-events:all}
+.map-resize-handle:hover{fill:#ecc88f;stroke:#35271e}
+.map-vertex-handle{fill:#f8f1e3;stroke:#78553e;stroke-width:2.2;cursor:grab;pointer-events:all}
+.map-vertex-handle:hover,.map-vertex-handle.is-active{fill:#d19a63;stroke:#4c3324}
+.map-vertex-handle:active{cursor:grabbing}
+.map-vertex-tools{border:1px solid #dfccb0;border-radius:10px;padding:12px;background:#f8f1e6;display:grid;gap:10px;min-width:0}
+.map-vertex-tools>strong{font-size:13px;color:#6d4a2d}
+.map-vertex-tools .inline-actions{flex-wrap:wrap}
+.map-quick-finish{position:absolute;right:16px;bottom:57px;z-index:4;background:#7d593a;color:#fff7e7;border:1px solid #e6c494;border-radius:9px;padding:10px 14px;box-shadow:0 5px 16px #33241640}
+.map-quick-finish:hover{background:#5b3d28}
+.map-focus-mode{position:fixed!important;inset:0!important;z-index:120;display:flex;flex-direction:column;overflow:hidden;width:100%;height:100dvh;max-height:100dvh;padding:0!important;margin:0!important;background:#f8f0e3;isolation:isolate}
+.map-focus-mode .map-editor-card{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;padding:0;margin:0;border:0;border-radius:0;background:#f8f0e3;box-shadow:none}
+.map-focus-mode .map-editor-head{flex:none;z-index:17;margin:0;padding:11px 18px;border-bottom:1px solid #d2b895;background:#fff8ed}
+.map-focus-mode .map-editor-heading h3{font-size:19px}
+.map-focus-mode .map-editor-tools{position:absolute;top:62px;left:12px;width:min(370px,85vw);max-height:calc(100dvh - 80px);overflow-y:auto;z-index:19;background:#fff8ec;border:1px solid #d1b998;border-radius:12px;padding:15px;box-shadow:0 12px 35px #2f211b42;overscroll-behavior:contain}
+.map-focus-mode .map-editor-tools.is-collapsed{display:none}
+.map-focus-mode .map-editor-tools .field-row{grid-template-columns:1fr}
+.map-focus-mode .map-workspace{display:block;position:relative;flex:1;min-height:0;overflow:hidden;margin:0;gap:0}
+.map-focus-mode .map-stage-column,.map-focus-mode .map-stage-wrap{position:absolute;inset:0;min-height:0;min-width:0}
+.map-focus-mode .map-canvas{height:100%;width:100%;border:0;border-radius:0;box-shadow:none;background:#e9d9b4}
+.map-focus-mode .map-stage-caption{position:absolute;bottom:15px;right:15px;left:auto;max-width:min(440px,65vw);padding:9px 13px;border-radius:10px;background:#fff8ebdf;color:#654c36;box-shadow:0 3px 14px #2b1d1022;pointer-events:none;text-align:right}
+.map-focus-mode .map-download-actions{position:absolute;left:15px;bottom:15px;z-index:9;display:flex;gap:7px;margin:0;background:#fff8ebea;border:1px solid #dec8a6;border-radius:11px;padding:5px}
+.map-focus-mode .map-inspector{position:absolute;z-index:20;right:13px;top:12px;width:min(344px,87vw);max-height:calc(100% - 25px);overflow-y:auto;overscroll-behavior:contain;background:#fffaf0;box-shadow:0 13px 36px #2c201b4a}
+.map-focus-mode .map-inspector.is-collapsed{display:none}
+.map-focus-mode .map-quick-finish{bottom:75px;right:18px}
+@media(max-width:720px){
+ .map-editor-head-actions .btn{font-size:11px;padding:8px 10px}
+ .map-focus-mode .map-editor-head{padding:9px 10px;flex-wrap:nowrap;gap:7px}
+ .map-focus-mode .map-editor-heading h3{font-size:16px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .map-focus-mode .map-editor-heading .muted{display:none}
+ .map-focus-mode .map-editor-head-actions{gap:4px}
+ .map-focus-mode .map-editor-head-actions .btn{font-size:10px;padding:8px 7px}
+ .map-focus-mode .map-editor-tools{top:55px;left:7px;width:min(335px,89vw);padding:12px;max-height:calc(100dvh - 70px)}
+ .map-focus-mode .map-inspector{top:8px;right:7px;width:min(325px,91vw);max-height:calc(100% - 16px)}
+ .map-focus-mode .map-stage-caption{right:8px;left:8px;max-width:none;bottom:9px;font-size:10px;padding:7px}
+ .map-focus-mode .map-download-actions{bottom:48px;left:8px}
+ .map-focus-mode .map-quick-finish{bottom:89px;right:8px}
+}
