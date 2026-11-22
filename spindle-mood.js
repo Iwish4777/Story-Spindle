@@ -86,7 +86,7 @@ function selectBoardOptions(p,sel){
 }
 function layerEditor(i,b){
  if(!i)return `<div class="empty"><strong>Select a layer</strong>Drag a photo, text block, or swatch to position it. Select it for more options.</div>`;
- const inp=(label,key,value,type='text',max='')=>`<div class="field"><label>${label}</label><input class="control" type="${type}" ${max?`min="1" max="${max}"`:''} data-mood-edit="${key}" value="${esc(value??'')}"></div>`;
+ const inp=(label,key,value,type='text',max='')=>`<div class="field"><label>${label}</label><input class="control" type="${type}" ${max?`min="${key==='rotate'?-180:['x','y','outline'].includes(key)?0:1}" max="${max}"`:''} data-mood-edit="${key}" value="${esc(value??'')}"></div>`;
  const sel=(label,key,pairs,value)=>`<div class="field"><label>${label}</label><select class="control" data-mood-edit="${key}">${opt(pairs,value)}</select></div>`;
  const check=(key,label)=>`<label class="toggle-row"><input type="checkbox" data-mood-edit="${key}" ${i[key]?'checked':''}>${label}</label>`;
  return `<div class="stack"><div class="inline-actions"><strong>${i.type==='text'?'Text layer':i.type==='image'?'Photo':'Fabric swatch'}</strong><button class="btn btn-danger btn-small" data-action="mood-remove-layer">Remove</button><button class="btn btn-secondary btn-small" data-action="mood-layer-front">Bring forward</button></div>
