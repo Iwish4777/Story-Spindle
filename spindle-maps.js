@@ -208,12 +208,17 @@ function render(p,{heading}){
 }
 function editPointFromEvent(e){
  const svg=document.getElementById('map-canvas');if(!svg)return null;
- const rect=svg.getBoundingClientRect();return point((e.clientX-rect.left)*W/rect.width,(e.clientY-rect.top)*H/rect.height);
+ const r=svg.getBoundingClientRect();
+ // SVG uses meet/letterboxing in focus mode, so account for unused space.
+ const scale=Math.min(r.width/W,r.height/H);
+ if(!scale)return null;
+ const offX=(r.width-W*scale)/2,offY=(r.height-H*scale)/2;
+ return point((e.clientX-r.left-offX)/scale,(e.clientY-r.top-offY)/scale);
 }
 function updatePreview(){
  const poly=document.getElementById('map-draft-line');if(!poly)return;
  const pts=tool==='polygon'?polygonPoints:(drawing?.points||[]);
- poly.setAttribute('points',pts.map(x=>`${x.x},${x.y}`).join(' '));
+ poly.setAttribute('points',pts.map(x=>x.x+','+x.y).join(' '));
 }
 function onPointerDown(e){
  const svg=e.target.closest?.('#map-canvas');if(!svg||!current(ctx.project()))return false;
@@ -222,35 +227,78 @@ function onPointerDown(e){
  if(tool==='label'){addLabel(m,p);return true;}
  const clicked=e.target.closest?.('[data-map-feature]');
  if(tool==='select'){
-  if(!clicked){selectedId='';ctx.render();return true;}
+  if(pointInsertMode){
+   const f=selected(m);
+   if(f?.points && clicked?.dataset.mapFeature===f.id){
+    const near=nearestPointOnEdge(f,p);
+    if(near){f.points.splice(near.index,0,near.point);selectedPoint=near.index;pointInsertMode=false;ctx.save();ctx.render();ctx.toast('Point added. Drag it to reshape.');}
+   }else ctx.toast('Tap the selected shape or line to insert a point.');
+   e.preventDefault();return true;
+  }
+  const vertex=e.target.closest?.('[data-map-vertex]'),handle=e.target.closest?.('[data-map-resize]');
+  if(vertex||handle){
+   const source=vertex||handle,f=m.features.find(x=>x.id===source.dataset.mapFeature);
+   if(!f)return true;
+   selectedId=f.id;
+   if(vertex){
+    const index=Number(vertex.dataset.mapVertex);
+    if(!Number.isInteger(index)||index<0||index>=f.points.length)return true;
+    selectedPoint=index;drawing={mode:'vertex',id:f.id,index,moved:false,start:p};
+   }else if(handle.dataset.mapResize==='label'){
+    selectedPoint=-1;drawing={mode:'label-resize',id:f.id,start:p,size:f.size,moved:false};
+   }else{
+    selectedPoint=-1;drawing={mode:'corner-resize',id:f.id,corner:handle.dataset.mapResize,original:f.points.map(q=>({...q})),start:p,moved:false};
+   }
+   svg.setPointerCapture?.(e.pointerId);e.preventDefault();return true;
+  }
+  if(!clicked){selectedId='';selectedPoint=-1;ctx.render();return true;}
   const f=m.features.find(x=>x.id===clicked.dataset.mapFeature);if(!f)return true;
-  selectedId=f.id;drawing={mode:'move',id:f.id,start:p,oldPoints:f.points?.map(q=>({...q})),oldX:f.x,oldY:f.y,moved:false};
-  e.preventDefault();return true;
+  selectedId=f.id;selectedPoint=-1;
+  drawing={mode:'move',id:f.id,start:p,original:f.points?.map(q=>({...q})),originalX:f.x,originalY:f.y,moved:false};
+  svg.setPointerCapture?.(e.pointerId);
+  svg.innerHTML=svgContent(m);e.preventDefault();return true;
  }
  if(tool==='freehand'||tool==='line'){
-  drawing={mode:tool,points:[p]};e.preventDefault();return true;
+  drawing={mode:tool,points:[p]};svg.setPointerCapture?.(e.pointerId);e.preventDefault();return true;
  }
  return false;
 }
 function onPointerMove(e){
- if(!drawing)return false;const p=editPointFromEvent(e);if(!p)return false;
- if(drawing.mode==='move'){
-  const m=current(ctx.project()),f=m?.features.find(x=>x.id===drawing.id);if(!f)return false;
-  const dx=p.x-drawing.start.x,dy=p.y-drawing.start.y;drawing.moved=true;
-  if(f.points){const bs=bounds(drawing.oldPoints),left=Math.max(0,-bs.minX-dx),right=Math.min(0,W-bs.maxX-dx),top=Math.max(0,-bs.minY-dy),bottom=Math.min(0,H-bs.maxY-dy);
-   const mx=dx+left+right,my=dy+top+bottom;f.points=drawing.oldPoints.map(x=>point(x.x+mx,x.y+my));
-  }else{f.x=clamp(drawing.oldX+dx,0,W);f.y=clamp(drawing.oldY+dy,0,H);}
-  const svg=document.getElementById('map-canvas');if(svg)svg.innerHTML=svgContent(m);
+ if(!drawing)return false;
+ const p=editPointFromEvent(e);if(!p)return false;
+ const d=drawing;
+ if(d.mode==='freehand'||d.mode==='line'){
+  const last=d.points[d.points.length-1];
+  if(Math.hypot(p.x-last.x,p.y-last.y)>5){d.points.push(p);updatePreview();}
   return true;
  }
- const points=drawing.points,last=points[points.length-1];if(Math.hypot(p.x-last.x,p.y-last.y)>5){points.push(p);updatePreview();}return true;
+ const m=current(ctx.project()),f=m?.features.find(x=>x.id===d.id);if(!f)return false;
+ const dx=p.x-d.start.x,dy=p.y-d.start.y;
+ if(Math.abs(dx)+Math.abs(dy)<.2&&!d.moved)return true;
+ d.moved=true;
+ if(d.mode==='vertex')f.points[d.index]=p;
+ else if(d.mode==='corner-resize')resizeCorners(f,d.original,d.corner,p);
+ else if(d.mode==='label-resize')f.size=clamp(Math.round(d.size+dx/2-dy/2),12,76);
+ else if(d.mode==='move'){
+  if(f.points){
+   const b=bounds(d.original),mx=clamp(dx,-b.minX,W-b.maxX),my=clamp(dy,-b.minY,H-b.maxY);
+   f.points=d.original.map(q=>point(q.x+mx,q.y+my));
+  }else {f.x=clamp(d.originalX+dx,0,W);f.y=clamp(d.originalY+dy,0,H);}
+ }
+ const svg=document.getElementById('map-canvas');if(svg)svg.innerHTML=svgContent(m);
+ return true;
 }
 function onPointerUp(e){
- if(!drawing)return false;const d=drawing;drawing=null;
- if(d.mode==='move'){if(d.moved)ctx.save();ctx.render();return true;}
+ if(!drawing)return false;
+ const d=drawing;drawing=null;
+ const svg=document.getElementById('map-canvas');
+ if(svg&&e?.pointerId!=null){try{svg.releasePointerCapture?.(e.pointerId);}catch(_){}}
+ if(['move','vertex','corner-resize','label-resize'].includes(d.mode)){
+  if(d.moved)ctx.save();ctx.render();return true;
+ }
  const m=current(ctx.project());if(!m)return false;
- if(d.mode==='freehand'&&d.points.length>=3)addRegion(m,d.points,'plains','Freehand region');
- else if(d.mode==='line'&&d.points.length>=2)addLine(m,d.points,lineStyle);
+ if(d.mode==='freehand'&&d.points.length>=3)addRegion(m,simplifyLine(d.points,7),'plains','Freehand region');
+ else if(d.mode==='line'&&d.points.length>=2)addLine(m,simplifyLine(d.points,5),lineStyle);
  else{ctx.render();ctx.toast('Draw a longer stroke to make a map feature.');}
  return true;
 }
