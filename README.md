@@ -3,7 +3,7 @@
 
 **Story Spindle** is a browser-based, entirely AI-free workspace for developing and writing a novel. This themed release incorporates the supplied vintage spinning-wheel banner and complements it with parchment, warm walnut, bronze, and ink-inspired colors.
 
-The app includes plot planning, character profiles, a worldbuilding encyclopedia, story ending, themes, chapter outlines, a manuscript editor, a word parking lot, a Strings inspiration notebook with rule-based pairing suggestions, daily writing/activity tracking, customizable goals, guided exercises, and rule-based continuity checks. It uses plain HTML, CSS, and JavaScript: **no AI, machine learning, third-party scripts, trackers, accounts, or network requests**.
+The app includes plot planning, character profiles, a worldbuilding encyclopedia, story ending, themes, chapter outlines, a manuscript editor, a word parking lot, a Strings inspiration notebook with rule-based pairing suggestions, a Story Trees visual connection explorer, daily writing/activity tracking, customizable goals, guided exercises, and rule-based continuity checks. It uses plain HTML, CSS, and JavaScript: **no AI, machine learning, third-party scripts, trackers, accounts, or network requests**.
 
 ## Open the app
 
@@ -47,6 +47,19 @@ This is a functional prototype, not a production-hardened manuscript storage sys
 - **Strings:** Store brief snippets, freeform notes, and comma-separated tags. Manually link any two Strings and record connection notes. The "Possible pairings" section surfaces common tags and significant words; "Unexpected pairing" gives you unlinked, non-overlapping snippets to consider. No semantic inference, AI, or text generation is involved.
 - All three features are per-project and included in local autosave and JSON backup/import. Previously saved projects are upgraded in place when loaded, preserving old sections and content.
 
+## Story Trees — visual story connections
+
+**Story Trees** is a new app tab that automatically visualizes existing project structures as a network.
+
+- **Story elements:** Main and supporting characters, chapter outlines, plot events, knowledge milestones/revelations, worldbuilding entries, themes, saved Strings, and a story ending when present.
+- **Automatic edges:** Chapter character assignments, recorded first appearances, plot-to-chapter assignments, revelation-to-character and revelation-to-chapter links, facts used in chapters, and saved String connections.
+- **Literal matching:** Worldbuilding entry names in a chapter's *location* field; theme names in a chapter's *theme/purpose* field; and character names in other characters' *relationship notes*. These are labeled as text matches or mentions, not as confirmed story relationships.
+- **Manual edges:** Create a link between any two entries with a relationship label and notes. The dashed edges are saved in `storyTreeLinks` and included in local storage and JSON exports/imports.
+- **Explore:** Click or keyboard-select an SVG node to focus on its direct connections. Filter by section, jump to a source editing section, or view the entire network. A broad overview displays at most 72 entries to maintain readability; the focus menu can reach entries beyond the preview limit.
+- **AI-free:** All nodes and automatic links come from explicitly saved fields and deterministic text matching. The app does not attempt to understand full manuscript prose or infer implicit meaning or relationships.
+
+The diagram updates when you open it after editing story details. Deleting an underlying entry hides its old graph connections; a manual connection to a deleted entry is left in the connection list, labeled as a deleted entry, so it can be removed deliberately.
+
 ## Progress dashboard and writing goals
 
 The homepage includes a dedicated manuscript word-count card, word/milestone progress, chapters with writing started, today's words added and tracked minutes, seven-day activity, consecutive-day streak, and a quick view of goals. Word-count badges on the Writing page sit at the bottom-right of the chapter editor with chapter, total manuscript, and character counts.
@@ -73,6 +86,7 @@ It cannot reliably interpret unrestricted prose. Every result is a **possible** 
 - `app.js` — data, screens, guided exercises, rule-based checks, saves, imports, exports
 - `spindle-features.js` — Word parking lot, Strings, and deterministic pairing suggestions
 - `spindle-progress.js` — Daily writing activity, manual timers, milestones, goal presets, and progress dashboard
+- `spindle-trees.js` — Visual relationship map, deterministic auto-links, and saved custom connections
 - `styles.css` — responsive design
 - `assets/story-spindle-banner.jpg` — supplied banner
 - `assets/spindle-mark.PNG` — user-supplied PNG brand icon
