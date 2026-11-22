@@ -241,3 +241,23 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 
 /* Ensure optional numerical target is hidden for one-time goals. */
 .field[hidden]{display:none!important}
+
+/* Story Trees visual relationships */
+.tree-stat-grid .metric .number{font-size:31px}
+.tree-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:14px 0}
+.tree-map-scroll{overflow:auto;max-height:620px;border:1px solid #dae2d6;border-radius:12px;background:radial-gradient(#e2e8dd 1px,transparent 1px) 0 0/25px 25px,#fbfcf8}
+.tree-map-scroll svg{display:block;max-width:none}
+.tree-graph-node{cursor:pointer;outline:none}
+.tree-graph-node:hover rect:first-of-type,.tree-graph-node:focus-visible rect:first-of-type{stroke-width:3}
+.tree-graph-node:focus-visible rect:first-of-type{stroke:#253c2e}
+.tree-detail{border-top:1px solid var(--line);padding-top:15px;margin-top:16px}
+.tree-detail-head{display:flex;justify-content:space-between;align-items:center;gap:15px}
+.tree-detail-head h3{margin:5px 0}
+.tree-related{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.tree-related button{display:grid;gap:5px;text-align:left;padding:12px;border:1px solid var(--line);border-radius:10px;background:#fdfdf9;color:var(--ink)}
+.tree-related button:hover{border-color:#9dbaa5;background:#f1f7ee}
+.tree-related strong{font-size:13px}
+.tree-related span{font-size:11px;color:var(--muted)}
+.tree-link-row{display:flex;gap:13px;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
+.tree-link-row strong{font-size:12px}
+@media(max-width:630px){.tree-filters,.tree-related{grid-template-columns:1fr}.tree-detail-head{flex-direction:column;align-items:start}.tree-map-scroll{max-height:460px}}
