@@ -143,7 +143,7 @@ function render(p,{heading}){
  ${[['select','Select / move'],['freehand','Draw region'],['polygon','Polygon points'],['line','Draw line'],['label','Place label']].map(([t,label])=>`<button class="btn btn-small ${tool===t?'':'btn-secondary'}" data-action="map-tool" data-tool="${t}">${label}</button>`).join('')}
  </div><div class="map-toolbar">
  <label class="small muted">Preset shapes:</label>
- ${[['island','Island'],['continent','Continent'],['peninsula','Peninsula'],['lake','Lake'],['archipelago','Small isles'],['canyon','Canyon']].map(([v,t])=>`<button class="btn btn-secondary btn-small" data-action="map-preset" data-shape="${v}">${t}</button>`).join('')}
+ ${[['ocean','Ocean base'],['island','Island'],['continent','Continent'],['peninsula','Peninsula'],['lake','Lake'],['archipelago','Archipelago'],['canyon','Canyon']].map(([v,t])=>`<button class="btn btn-secondary btn-small" data-action="map-preset" data-shape="${v}">${t}</button>`).join('')}
  </div>
  <div class="map-toolbar"><label class="small muted">Lines:</label><select class="control map-line-select" data-map-line-style>${opt(lineKinds,lineStyle)}</select>
  <button class="btn btn-secondary btn-small" data-action="map-finish-polygon" ${tool==='polygon'&&polygonPoints.length>=3?'':'disabled'}>Finish polygon (${polygonPoints.length} points)</button>
@@ -218,7 +218,19 @@ function onAction(a,el,p){
  if(a==='map-tool'){tool=el.dataset.tool;drawing=null;polygonPoints=[];ctx.render();}
  if(a==='map-preset'&&m){
   const shape=el.dataset.shape;
-  addRegion(m,presetPoints(shape),shape==='lake'?'lake':shape==='canyon'?'canyon':'plains',shape.charAt(0).toUpperCase()+shape.slice(1));
+  if(shape==='ocean'){
+   addRegion(m,[point(34,34),point(966,34),point(966,616),point(34,616)],'ocean','Ocean background');
+   const added=m.features.pop();if(added)m.features.unshift(added);
+   ctx.save();ctx.render();
+  }else if(shape==='archipelago'){
+   for(const [dx,dy,scale,n] of [[-115,-25,.48,1],[80,-60,.36,2],[110,75,.46,3]]){
+     const cx=500+dx,cy=325+dy;
+     const pts=presetPoints('island',cx,cy).map(pt=>point(cx+(pt.x-cx)*scale,cy+(pt.y-cy)*scale));
+     addRegion(m,pts,'plains','Island '+n);
+   }
+  }else{
+   addRegion(m,presetPoints(shape),shape==='lake'?'lake':shape==='canyon'?'canyon':'plains',shape.charAt(0).toUpperCase()+shape.slice(1));
+  }
   tool='select';
  }
  if(a==='map-finish-polygon'){
