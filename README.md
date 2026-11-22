@@ -27,6 +27,18 @@ The custom icon is linked from `index.html` with an Apple touch icon declaration
 
 You can deploy the same files to GitHub Pages or another static host. No build process is required. The banner and spinning-wheel mark are included; you don't need to add image files manually.
 
+## User guide (built into the app)
+
+A small **? Help** button sits beside Back up in the top bar, available on every Spindle screen. It opens a **searchable, plain-language Help & User Guide** overlay without changing the active novel or tab. The guide includes 19 topics on starting a novel, planning, manuscript editing, Story Trees, Mood Boards, Map Studio, goals, continuity, backups, importing, image licenses and troubleshooting.
+
+- Search the guide, browse grouped topics, or use an **Open section** button to navigate to the related tool.
+- On phones, the guide topic list becomes a compact horizontally scrolling strip, leaving room for instructions.
+- The guide also offers **↓ Guide** to download a Markdown copy for reference outside the app. The same text is available as `USER-GUIDE.md` in the repository.
+- Press Escape, tap **Back to Spindle**, tap the close button, or tap outside the guide to dismiss it; your current writing remains in place.
+- The footer also includes a discreet **User Guide** link.
+
+Guide search and rendering are local and entirely AI-free. No sign-in or network connection is needed to read help. The guide is implemented in `spindle-help.js`, loaded before `app.js`.
+
 ## Navigation and the at-a-glance dashboard
 
 The story section tabs sit in a fixed **bottom navigation bar** on desktop and mobile. **Overview** stays pinned on the left, and other tabs can be accessed by horizontally swiping or scrolling the bottom row. The current tab is highlighted. Project switching, new novels and Back up remain in the top bar.

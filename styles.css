@@ -347,3 +347,65 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 @media(max-width:1130px){.overview-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:720px){:root{--tab-dock-height:89px}.app-shell{display:flex;flex-direction:column}.topbar{min-height:64px;padding:9px 12px}.topbar-start{gap:8px;flex:1}.topbar-brand strong{display:none}.topbar-brand .brand-mark{width:32px;height:32px}.topbar-right{flex:none}.project-switcher select{max-width:40vw;padding-right:3px}.bottom-tabs .nav-btn{min-height:72px;min-width:78px;max-width:106px;font-size:10px}.bottom-home .nav-btn{min-width:80px}.bottom-scroll{padding:4px 8px}.home-page .story-ribbon{margin-bottom:12px}.overview-snapshot{padding:14px 11px}.overview-metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.overview-metric{padding:10px 8px}.overview-metric strong{font-size:25px}.page{padding-bottom:36px}}
 @media(max-width:420px){.overview-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.topbar-brand{display:none}.project-switcher select{max-width:48vw}.bottom-tabs .nav-btn{min-width:74px}.bottom-home .nav-btn{min-width:76px}}
+
+/* Quiet, searchable help guide — visible from the header, never a new app tab. */
+.help-launch{display:inline-flex;align-items:center;justify-content:center;gap:7px;flex:none;padding:7px 10px;border:1px solid #d6c2a6;background:#fffaf1;color:#61442b;border-radius:10px;font-size:12px;font-weight:740;white-space:nowrap}
+.help-launch:hover{background:#f4e8d6;border-color:#b99363}
+.help-launch-symbol{display:grid;place-items:center;width:22px;height:22px;border:1.5px solid currentColor;border-radius:50%;font:700 15px/1 Georgia,serif}
+.footer-help-link{margin-left:5px;background:transparent;border:0;border-bottom:1px dotted #aa8054;padding:0 1px;color:#765436;font-size:inherit}
+.footer-help-link:hover{color:#432c1e;border-bottom-color:currentColor}
+.help-layer{z-index:110;padding:clamp(10px,2.2vw,22px)}
+.help-dialog{display:flex;flex-direction:column;width:min(900px,100%);max-height:min(88dvh,850px);overflow:hidden;background:#fffaf0;border:1px solid #d7bf9f;border-radius:18px;box-shadow:0 25px 90px #23191277;color:#3c3028}
+.help-header{flex:none;display:flex;align-items:start;justify-content:space-between;gap:12px;padding:22px 24px 13px;border-bottom:1px solid #e7d9c4}
+.help-header h2{font:normal clamp(23px,3vw,29px)/1.1 Georgia,serif;color:#543722;margin:4px 0 6px}
+.help-header p{font-size:12px;color:#796855;margin:0}
+.help-close{display:grid;place-items:center;flex:none;width:36px;height:36px;border:1px solid #d7c1a6;border-radius:10px;background:#fffefa;color:#66462c;font:normal 27px/1 sans-serif}
+.help-close:hover{background:#f1e3d0}
+.help-search-row{display:flex;align-items:center;gap:10px;flex:none;padding:13px 24px;border-bottom:1px solid #ebdecb;background:#f9f1e4}
+.help-search-row>span{color:#93734c;font-size:25px;line-height:1}
+.help-search-row .control{flex:1;width:100%;min-width:0;background:#fffef8}
+.help-search-row .btn{white-space:nowrap}
+.help-body{display:grid;grid-template-columns:270px minmax(0,1fr);flex:1;min-height:0;overflow:hidden}
+.help-topics{min-height:0;overflow:auto;background:#f7eddf;border-right:1px solid #dfceb7;overscroll-behavior:contain}
+.help-list-head{padding:13px 17px 8px;font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:#877157;font-weight:800}
+.help-topic-list{padding:0 8px 14px}
+.help-group{padding-top:10px}
+.help-group-title{padding:8px 10px 5px;color:#8d6e48;font-size:10px;letter-spacing:.095em;font-weight:850;text-transform:uppercase}
+.help-topic{width:100%;display:block;text-align:left;padding:9px 12px;border:1px solid transparent;border-radius:9px;background:transparent;color:#634a35;font-size:12px;line-height:1.35}
+.help-topic:hover{background:#eee0cd}
+.help-topic.is-selected{background:#e6d3b6;border-color:#cab18c;color:#54371d;font-weight:780}
+.help-none{padding:10px;font-size:12px;color:#846d59}
+.help-article{min-height:0;overflow:auto;overscroll-behavior:contain;padding:27px 29px 33px;scroll-behavior:smooth}
+.help-chapter-label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#967045;font-weight:800}
+.help-article h3{font:normal clamp(22px,2.5vw,30px)/1.2 Georgia,serif;margin:8px 0 10px;color:#513723}
+.help-subtitle{font-size:14px;color:#806953;line-height:1.5;margin:0 0 20px}
+.help-steps{padding-left:25px;margin:0 0 20px;line-height:1.65;font-size:13px}
+.help-steps li{padding-left:5px;margin-bottom:11px}
+.help-steps li::marker{font-weight:800;color:#9c7345}
+.help-tips{padding:14px 17px;background:#f4ead9;border:1px solid #e7d6bd;border-radius:11px;font-size:12px;line-height:1.55;color:#68513b;margin:18px 0}
+.help-tips strong{display:block;color:#664529;margin-bottom:6px}
+.help-tips p{margin:8px 0 0;color:inherit}
+.help-go-to{margin-top:5px;font-size:12px}
+.help-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 21px;border-top:1px solid #e5d4bd;font-size:11px;color:#8b765d;flex:none;background:#fbf4e9}
+@media(max-width:720px){
+ .help-launch{width:38px;height:37px;padding:5px}
+ .help-launch-label{display:none}
+ .help-search-row{padding:10px 13px}
+ .help-header{padding:16px 15px 13px}
+ .help-dialog{max-height:calc(100dvh - 24px);width:100%}
+ .help-body{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}
+ .help-topics{max-height:142px;border-right:0;border-bottom:1px solid #dfceb7}
+ .help-topic-list{display:flex;gap:6px;align-items:start;overflow-x:auto;padding:3px 10px 8px}
+ .help-group{display:contents}
+ .help-group-title{display:none}
+ .help-topic{flex:0 0 auto;width:auto;max-width:175px;padding:9px 11px;white-space:normal;font-size:11px;background:#fff9ed;border:1px solid #e2d1b7}
+ .help-list-head{padding:8px 13px 5px}
+ .help-article{padding:19px 18px 24px}
+ .help-footer{padding:9px 13px}
+}
+@media(max-width:420px){
+ .help-search-row .btn{padding:8px 9px}
+ .help-launch{width:35px}
+ .help-dialog{max-height:calc(100dvh - 14px)}
+ .help-layer{padding:7px}
+}
