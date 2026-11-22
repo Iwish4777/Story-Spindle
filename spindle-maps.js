@@ -32,7 +32,7 @@ function current(p){ensure(p);const m=p.storyMaps.find(x=>x.id===activeId)||p.st
 function selected(m){const f=m?.features.find(x=>x.id===selectedId);if(!f)selectedId='';return f;}
 function point(x,y){return {x:Math.round(clamp(x,0,W)*10)/10,y:Math.round(clamp(y,0,H)*10)/10};}
 function presetPoints(shape,x=500,y=325){
- const params={island:[155,100,15],continent:[240,165,48],lake:[125,80,24],archipelago:[100,65,18],peninsula:[175,130,18],canyon:[160,85,14]};
+ const params={island:[155,100,15],continent:[240,165,36],lake:[125,80,24],archipelago:[100,65,18],peninsula:[175,130,18],canyon:[160,85,14]};
  const [rx,ry,count]=params[shape]||params.island,pts=[];
  for(let i=0;i<count;i++){
   const angle=i*2*Math.PI/count;
@@ -91,7 +91,7 @@ function mapHandles(m){
  const corners=[['nw',b.x,b.y],['ne',b.x+b.w,b.y],['sw',b.x,b.y+b.h],['se',b.x+b.w,b.y+b.h]];
  return '<g class="map-edit-handles"><rect class="map-handle-bounds" x="'+b.x+'" y="'+b.y+'" width="'+b.w+'" height="'+b.h+'" pointer-events="none"/>'+
  corners.map(([corner,x,y])=>'<rect class="map-resize-handle" data-map-resize="'+corner+'" data-map-feature="'+id+'" x="'+(x-9)+'" y="'+(y-9)+'" width="18" height="18" rx="3"><title>Drag to resize</title></rect>').join('')+
- f.points.map((p,i)=>'<circle class="map-vertex-handle '+(i===selectedPoint?'is-active':'')+'" data-map-vertex="'+i+'" data-map-feature="'+id+'" cx="'+p.x+'" cy="'+p.y+'" r="'+(i===selectedPoint?9:7)+'"><title>Drag point '+(i+1)+'</title></circle>').join('')+'</g>';
+ f.points.map((p,i)=>'<circle class="map-vertex-handle '+(i===selectedPoint?'is-active':'')+'" data-map-vertex="'+i+'" data-map-feature="'+id+'" cx="'+p.x+'" cy="'+p.y+'" r="'+(i===selectedPoint?14:11)+'"><title>Drag point '+(i+1)+'</title></circle>').join('')+'</g>';
 }
 function nearestPointOnEdge(f,p){
  let best=null;const pts=f.points,count=f.type==='region'?pts.length:pts.length-1;
@@ -255,7 +255,7 @@ function onPointerDown(e){
  const svg=e.target.closest?.('#map-canvas');if(!svg||!current(ctx.project()))return false;
  const p=editPointFromEvent(e);if(!p)return false;const m=current(ctx.project());
  if(tool==='polygon'){polygonPoints.push(p);ctx.render();updatePreview();return true;}
- if(tool==='label'){addLabel(m,p);return true;}
+ if(tool==='label'){addLabel(m,p);tool='select';ctx.render();return true;}
  const clicked=e.target.closest?.('[data-map-feature]');
  if(tool==='select'){
   if(pointInsertMode){
@@ -328,8 +328,8 @@ function onPointerUp(e){
   if(d.moved)ctx.save();ctx.render();return true;
  }
  const m=current(ctx.project());if(!m)return false;
- if(d.mode==='freehand'&&d.points.length>=3)addRegion(m,simplifyLine(d.points,7),'plains','Freehand region');
- else if(d.mode==='line'&&d.points.length>=2)addLine(m,simplifyLine(d.points,5),lineStyle);
+ if(d.mode==='freehand'&&d.points.length>=3){addRegion(m,simplifyLine(d.points,7),'plains','Freehand region');tool='select';ctx.render();}
+ else if(d.mode==='line'&&d.points.length>=2){addLine(m,simplifyLine(d.points,5),lineStyle);tool='select';ctx.render();}
  else{ctx.render();ctx.toast('Draw a longer stroke to make a map feature.');}
  return true;
 }
