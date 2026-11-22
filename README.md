@@ -19,6 +19,12 @@ The app includes plot planning, character profiles, a worldbuilding encyclopedia
 
 You can deploy the same files to GitHub Pages or another static host. No build process is required. The banner and spinning-wheel mark are included; you don't need to add image files manually.
 
+## Navigation and the at-a-glance dashboard
+
+The story section tabs sit in a fixed **bottom navigation bar** on desktop and mobile. **Overview** stays pinned on the left, and other tabs can be accessed by horizontally swiping or scrolling the bottom row. The current tab is highlighted. Project switching, new novels and Back up remain in the top bar.
+
+On the Overview page, the banner is followed immediately by six summary statistics: manuscript words, chapters planned, characters tracked, words added today, worldbuilding entries, and mood boards/maps. **More writing progress** expands to reveal weekly activity, writing milestones and goals. The quick links to creative tools remain below the dashboard.
+
 ## The design
 
 - `assets/story-spindle-banner.jpg`: the **original banner you supplied**, included as the dashboard's full-width visual (with no text overlay or forced crop).

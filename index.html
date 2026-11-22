@@ -8,24 +8,19 @@
   <title>Story Spindle — Weave the threads of your story</title>
   <link rel="icon" type="image/png" href="assets/spindle-mark.PNG">
   <link rel="apple-touch-icon" href="assets/spindle-mark.PNG">
-  <link rel="stylesheet" href="styles.css?v=20261122-visual">
+  <link rel="stylesheet" href="styles.css?v=20261122-bottom-nav">
 </head>
 <body>
   <div class="app-shell" id="app">
-    <aside class="sidebar" aria-label="Main navigation">
-      <div class="sidebar-brand"><span class="brand-mark" aria-hidden="true"><img src="assets/spindle-mark.PNG" alt=""></span><div><strong>Story Spindle</strong><small>Weave your story</small></div></div>
-      <div class="sidebar-label">THE WRITER’S DESK</div>
-      <nav id="sidebar-nav" aria-label="Sections"></nav>
-      <div class="sidebar-bottom"><span class="offline-dot" aria-hidden="true"></span><span>Crafted for human stories</span><small>Writing stays in this browser unless exported</small></div>
-    </aside>
     <div class="main-column">
       <header class="topbar">
-        <div class="project-switcher"><label class="visually-hidden" for="project-select">Choose a project</label><select id="project-select"></select><button class="icon-btn" data-action="new-project" title="New novel project" aria-label="New novel project">＋</button></div>
+        <div class="topbar-start"><div class="topbar-brand"><span class="brand-mark" aria-hidden="true"><img src="assets/spindle-mark.PNG" alt=""></span><strong>Story Spindle</strong></div><div class="project-switcher"><label class="visually-hidden" for="project-select">Choose a project</label><select id="project-select"></select><button class="icon-btn" data-action="new-project" title="New novel project" aria-label="New novel project">＋</button></div></div>
         <div class="topbar-right"><span id="save-status" class="save-status" role="status">Saved locally</span><button class="btn btn-secondary btn-small" data-action="export-project">↧ Back up</button></div>
       </header>
       <main id="main-content" tabindex="-1"></main>
       <footer class="footer">Story Spindle · No AI or account required. Creative image search uses Openverse only when requested. Stories save in this browser; back them up regularly.</footer>
     </div>
+    <nav class="bottom-tabs" aria-label="Story navigation"><div id="bottom-nav-overview" class="bottom-home"></div><div id="sidebar-nav" class="bottom-scroll" role="group" aria-label="Creative sections — scroll sideways for more"></div></nav>
   </div>
   <div id="modal-layer"></div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
@@ -35,6 +30,6 @@
   <script src="spindle-trees.js?v=20261121-trees" defer></script>
   <script src="spindle-mood.js?v=20261122-visual" defer></script>
   <script src="spindle-maps.js?v=20261122-visual" defer></script>
-  <script src="app.js?v=20261122-visual" defer></script>
+  <script src="app.js?v=20261122-bottom-nav" defer></script>
 </body>
 </html>

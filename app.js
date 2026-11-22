@@ -124,17 +124,33 @@ function itemHead(title,path,id,number,canMove=true){return `<div class="item-he
 function emptyState(name,description){return `<div class="empty"><strong>${esc(name)}</strong>${esc(description)}</div>`;}
 function heading(section,title,desc,actions=''){return `<div class="page-heading"><div><div class="eyebrow">${esc(section)}</div><h1>${esc(title)}</h1><p>${esc(desc)}</p></div>${actions?`<div class="inline-actions">${actions}</div>`:''}</div>`;}
 const guideButton = key => `<button class="btn btn-secondary btn-small" data-action="guide" data-guide="${key}">✳ Guided exercises</button>`;
-function renderNav(){document.getElementById('sidebar-nav').innerHTML=NAV.map(([id,icon,label])=>`<button class="nav-btn ${activeView===id?'active':''}" data-action="nav" data-view="${id}" ${activeView===id?'aria-current="page"':''}><span class="nav-icon" aria-hidden="true">${icon}</span>${label}</button>`).join('');}
+function renderNav(){
+ const button=([id,icon,label])=>`<button class="nav-btn ${activeView===id?'active':''}" data-action="nav" data-view="${id}" type="button" title="${label}" ${activeView===id?'aria-current="page"':''}><span class="nav-icon" aria-hidden="true">${icon}</span><span class="nav-label">${label}</span></button>`;
+ document.getElementById('bottom-nav-overview').innerHTML=button(NAV[0]);
+ const strip=document.getElementById('sidebar-nav'),old=strip.scrollLeft;strip.innerHTML=NAV.slice(1).map(button).join('');strip.scrollLeft=old;
+ const active=strip.querySelector('.nav-btn.active');
+ if(active&&(active.offsetLeft-strip.offsetLeft<strip.scrollLeft||active.offsetLeft-strip.offsetLeft+active.offsetWidth>strip.scrollLeft+strip.clientWidth))strip.scrollLeft=Math.max(0,active.offsetLeft-strip.offsetLeft-strip.clientWidth/2+active.offsetWidth/2);
+}
 function renderSwitcher(){document.getElementById('project-select').innerHTML=options(store.projects.map(p=>[p.id,p.title || 'Untitled novel']),project().id);}
 function hero(){return `<div class="hero"><img src="assets/story-spindle-banner.jpg" alt="Story Spindle — Weave the threads of your story. A vintage spinning wheel beside antique lettering on parchment." loading="eager" decoding="async"></div><div class="story-ribbon"><div class="ribbon-eyebrow">YOUR CURRENT MANUSCRIPT</div><h1>${esc(project().title)}</h1><p>Gather the threads. Shape the world. Tell your story.</p></div>`;}
 function dashboard(p){
  const totalWords=p.chapters.reduce((sum,c)=>sum+countWords(c.manuscript),0);
- return `<section class="page">${hero()}${heading('The writing desk','Every thread has its place','Your plot, characters, world, and chapters—all connected, all your own.')}
- <div class="grid three">
-  <div class="card metric"><span class="metric-icon">✎</span><span class="number">${totalWords.toLocaleString()}</span><small>Manuscript words</small></div>
-  <div class="card metric"><span class="metric-icon">▤</span><span class="number">${p.chapters.length}</span><small>Chapters planned</small></div>
-  <div class="card metric"><span class="metric-icon">♙</span><span class="number">${allCharacters(p).length}</span><small>Characters tracked</small></div>
- </div><h2 class="section-title">Continue creating</h2>
+ const today=p.writingActivity?.[SpindleProgress.dayKey()]||{};
+ return `<section class="page home-page">${hero()}
+ <section class="overview-snapshot" aria-label="Novel overview dashboard">
+  <div class="overview-snapshot-head"><div><div class="eyebrow">YOUR WRITING DESK</div><h2>At a glance</h2></div><button class="btn btn-secondary btn-small" data-action="nav" data-view="goals">View goals</button></div>
+  <div class="overview-metrics">
+   <div class="overview-metric"><span class="metric-icon">✎</span><strong>${totalWords.toLocaleString()}</strong><small>Manuscript words</small></div>
+   <div class="overview-metric"><span class="metric-icon">▤</span><strong>${p.chapters.length}</strong><small>Chapters planned</small></div>
+   <div class="overview-metric"><span class="metric-icon">♙</span><strong>${allCharacters(p).length}</strong><small>Characters tracked</small></div>
+   <div class="overview-metric"><span class="metric-icon">✦</span><strong>${(Number(today.wordsAdded)||0).toLocaleString()}</strong><small>Words added today</small></div>
+   <div class="overview-metric"><span class="metric-icon">◈</span><strong>${p.world.length}</strong><small>Worldbuilding entries</small></div>
+   <div class="overview-metric"><span class="metric-icon">◐</span><strong>${(p.moodBoards||[]).length+(p.storyMaps||[]).length}</strong><small>Mood boards & maps</small></div>
+  </div>
+ </section>
+ <details class="progress-disclosure"><summary>▸ More writing progress <span class="small muted">Weekly activity, milestones & goals</span></summary><div class="progress-disclosure-body">${SpindleProgress.dashboardWidgets(p,{esc})}</div></details>
+ ${heading('The writing desk','Every thread has its place','Your plot, characters, world, and chapters—all connected, all your own.')}
+ <h2 class="section-title">Continue creating</h2>
  <div class="grid three">${[
  ['plot','◇','Shape the plot','Outline major events and connect them to chapters.'],
  ['main','♙','Know your characters','Develop personalities, appearances, and character arcs.'],
@@ -149,8 +165,8 @@ function dashboard(p){
  ['mood','◐','Build mood boards','Collect images, text, and tactile color inspiration.'],
  ['maps','⌖','Illustrate story maps','Sketch worlds, landforms and routes on parchment.']
  ].map(([key,icon,title,desc])=>`<button class="link-card" data-action="nav" data-view="${key}"><span style="font-size:23px">${icon}</span><span class="title">${title}</span><span class="description">${desc}</span></button>`).join('')}</div>
- ${SpindleProgress.dashboardWidgets(p,{esc})}
- <div class="info" style="margin-top:19px"><strong>Private by design.</strong> Your work is saved in this browser, not on a server. Export regular backups from Project & backup. The app has no AI features, accounts, analytics, or outside connections.</div>
+ 
+ <div class="info" style="margin-top:19px"><strong>Private by design.</strong> Your work is saved in this browser, not on a server. Export regular backups from Project & backup. There is no AI or analytics; optional Openverse image searches use the internet.</div>
  </section>`;
 }
 function plotPage(p){const events=p.plot.events||[];return `<section class="page">${heading('Story architecture','Plot','Record what you know, leave what you don’t, and connect important turning points to chapters.',guideButton('plot'))}
