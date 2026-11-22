@@ -1,7 +1,7 @@
 /* Story Spindle: illustrated parchment map studio (AI-free). */
 (function mapStudio(){
 'use strict';
-let ctx=null,activeId='',selectedId='',tool='select',drawing=null,polygonPoints=[],lineStyle='road',paper='antique';
+let ctx=null,activeId='',selectedId='',selectedPoint=-1,tool='select',drawing=null,polygonPoints=[],lineStyle='road',paper='antique',pointInsertMode=false,focusMode=false,toolsOpen=false,detailsOpen=false;
 const W=1000,H=650;
 const themePalette=[
  ['antique','Aged parchment','#e9d9b4','#917f62'],
@@ -32,37 +32,87 @@ function current(p){ensure(p);const m=p.storyMaps.find(x=>x.id===activeId)||p.st
 function selected(m){const f=m?.features.find(x=>x.id===selectedId);if(!f)selectedId='';return f;}
 function point(x,y){return {x:Math.round(clamp(x,0,W)*10)/10,y:Math.round(clamp(y,0,H)*10)/10};}
 function presetPoints(shape,x=500,y=325){
- const params={island:[155,100,15],continent:[240,165,24],lake:[125,80,24],archipelago:[100,65,18],peninsula:[175,130,18],canyon:[160,85,14]};
+ const params={island:[155,100,15],continent:[240,165,48],lake:[125,80,24],archipelago:[100,65,18],peninsula:[175,130,18],canyon:[160,85,14]};
  const [rx,ry,count]=params[shape]||params.island,pts=[];
  for(let i=0;i<count;i++){
   const angle=i*2*Math.PI/count;
-  const wobble=shape==='lake'?.91+.08*Math.sin(i*2.7):shape==='canyon'?.82+.16*Math.sin(i*3.3):.74+.22*Math.sin(i*2.3+1.1)+.08*Math.cos(i*5.6);
+  const wobble=shape==='continent'?.89+.07*Math.sin(angle*3+.7)+.045*Math.cos(angle*7-.2):shape==='lake'?.91+.08*Math.sin(i*2.7):shape==='canyon'?.82+.16*Math.sin(i*3.3):.74+.22*Math.sin(i*2.3+1.1)+.08*Math.cos(i*5.6);
   let dx=Math.cos(angle)*rx*wobble,dy=Math.sin(angle)*ry*wobble;
   if(shape==='peninsula'&&Math.cos(angle)<-.2)dx*=.32;
   pts.push(point(x+dx,y+dy));
  }
  return pts;
 }
-function addMap(p){ensure(p);const m={id:uid(),title:`Story map ${p.storyMaps.length+1}`,paper:'antique',features:[]};p.storyMaps.push(m);activeId=m.id;selectedId='';tool='select';ctx.save();ctx.render();ctx.toast('A blank parchment map is ready.');}
-function addRegion(m,points,kind='plains',title='Land region'){
+function addMap(p){ensure(p);const m={id:uid(),title:`Story map ${p.storyMaps.length+1}`,paper:'antique',features:[]};p.storyMaps.push(m);activeId=m.id;selectedId='';selectedPoint=-1;tool='select';ctx.save();ctx.render();ctx.toast('A blank parchment map is ready.');}
+function addRegion(m,points,kind='plains',title='Land region',smooth=false){
  if(m.features.length>=300){ctx.toast('This map has reached the 300-element safety limit.');return;}
  if(points.length<3)return;
- const f={id:uid(),type:'region',title,points,terrain1:kind,terrain2:'evergreen',terrain3:'rocky-mountains',weight1:100,weight2:0,weight3:0,opacity:1};
- m.features.push(f);selectedId=f.id;ctx.save();ctx.render();
+ const f={id:uid(),type:'region',title,points,smooth,terrain1:kind,terrain2:'evergreen',terrain3:'rocky-mountains',weight1:100,weight2:0,weight3:0,opacity:1};
+ m.features.push(f);selectedId=f.id;selectedPoint=-1;pointInsertMode=false;ctx.save();ctx.render();
 }
 function addLine(m,points,style=lineStyle){
  if(points.length<2)return;
  if(m.features.length>=300){ctx.toast('This map has reached its 300-element limit.');return;}
  const f={id:uid(),type:'line',title:lineKinds.find(x=>x[0]===style)?.[1]||'Line',points,style,width:style==='border'?2.2:style==='river'?5:3.3};
- m.features.push(f);selectedId=f.id;ctx.save();ctx.render();
+ m.features.push(f);selectedId=f.id;selectedPoint=-1;pointInsertMode=false;ctx.save();ctx.render();
 }
 function addLabel(m,p){
  const f={id:uid(),type:'label',title:'New place',x:p.x,y:p.y,size:27,color:'#674e3f'};
- m.features.push(f);selectedId=f.id;ctx.save();ctx.render();
+ m.features.push(f);selectedId=f.id;selectedPoint=-1;pointInsertMode=false;ctx.save();ctx.render();
 }
 function bounds(points){
  const xs=points.map(p=>p.x),ys=points.map(p=>p.y);
  return {minX:Math.min(...xs),minY:Math.min(...ys),maxX:Math.max(...xs),maxY:Math.max(...ys)};
+}
+
+function shapePath(points,smooth=false){
+ if(!points.length)return '';
+ let path='M '+points[0].x+' '+points[0].y;
+ if(!smooth||points.length<3)return path+points.slice(1).map(p=>' L '+p.x+' '+p.y).join('')+' Z';
+ for(let i=0;i<points.length;i++){
+  const a=points[(i-1+points.length)%points.length],b=points[i],c=points[(i+1)%points.length],d=points[(i+2)%points.length],t=.85/6;
+  path+=' C '+(b.x+(c.x-a.x)*t).toFixed(1)+' '+(b.y+(c.y-a.y)*t).toFixed(1)+' '+(c.x-(d.x-b.x)*t).toFixed(1)+' '+(c.y-(d.y-b.y)*t).toFixed(1)+' '+c.x+' '+c.y;
+ }
+ return path+' Z';
+}
+function handleBounds(pts){
+ const b=bounds(pts),cx=(b.minX+b.maxX)/2,cy=(b.minY+b.maxY)/2,w=Math.max(30,b.maxX-b.minX),h=Math.max(30,b.maxY-b.minY);
+ return {x:clamp(cx-w/2,3,W-w-3),y:clamp(cy-h/2,3,H-h-3),w,h};
+}
+function mapHandles(m){
+ if(tool!=='select')return '';
+ const f=selected(m);if(!f)return '';
+ if(f.type==='label'){
+  const x=clamp(f.x+Math.max(26,f.size*1.3),12,W-12),y=clamp(f.y-f.size,12,H-12);
+  return '<g class="map-edit-handles"><rect class="map-resize-handle" data-map-resize="label" data-map-feature="'+esc(f.id)+'" x="'+(x-10)+'" y="'+(y-10)+'" width="20" height="20" rx="3"><title>Resize label</title></rect></g>';
+ }
+ if(!f.points?.length)return '';
+ const b=handleBounds(f.points),id=esc(f.id);
+ const corners=[['nw',b.x,b.y],['ne',b.x+b.w,b.y],['sw',b.x,b.y+b.h],['se',b.x+b.w,b.y+b.h]];
+ return '<g class="map-edit-handles"><rect class="map-handle-bounds" x="'+b.x+'" y="'+b.y+'" width="'+b.w+'" height="'+b.h+'" pointer-events="none"/>'+
+ corners.map(([corner,x,y])=>'<rect class="map-resize-handle" data-map-resize="'+corner+'" data-map-feature="'+id+'" x="'+(x-9)+'" y="'+(y-9)+'" width="18" height="18" rx="3"><title>Drag to resize</title></rect>').join('')+
+ f.points.map((p,i)=>'<circle class="map-vertex-handle '+(i===selectedPoint?'is-active':'')+'" data-map-vertex="'+i+'" data-map-feature="'+id+'" cx="'+p.x+'" cy="'+p.y+'" r="'+(i===selectedPoint?9:7)+'"><title>Drag point '+(i+1)+'</title></circle>').join('')+'</g>';
+}
+function nearestPointOnEdge(f,p){
+ let best=null;const pts=f.points,count=f.type==='region'?pts.length:pts.length-1;
+ for(let i=0;i<count;i++){
+  const a=pts[i],b=pts[(i+1)%pts.length],dx=b.x-a.x,dy=b.y-a.y,t=clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/(dx*dx+dy*dy||1),0,1);
+  const q=point(a.x+dx*t,a.y+dy*t),dist=Math.hypot(q.x-p.x,q.y-p.y);
+  if(!best||dist<best.dist)best={index:i+1,point:q,dist};
+ }return best;
+}
+function resizeCorners(f,points,corner,p){
+ const b=handleBounds(points),ax=corner.includes('w')?b.x+b.w:b.x,ay=corner[0]==='n'?b.y+b.h:b.y,
+ hx=corner.includes('w')?b.x:b.x+b.w,hy=corner[0]==='n'?b.y:b.y+b.h;
+ const sx=clamp((p.x-ax)/(hx-ax),.06,10),sy=clamp((p.y-ay)/(hy-ay),.06,10);
+ f.points=points.map(v=>point(ax+(v.x-ax)*sx,ay+(v.y-ay)*sy));
+}
+function simplifyLine(pts,tol=6){
+ if(pts.length<5)return pts;
+ const d=(p,a,b)=>{const dx=b.x-a.x,dy=b.y-a.y,t=clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/(dx*dx+dy*dy||1),0,1);return (p.x-a.x-dx*t)**2+(p.y-a.y-dy*t)**2;};
+ const keep=new Set([0,pts.length-1]),stack=[[0,pts.length-1]];
+ while(stack.length){const [a,b]=stack.pop();let at=-1,max=tol*tol;for(let j=a+1;j<b;j++){const x=d(pts[j],pts[a],pts[b]);if(x>max){max=x;at=j;}}if(at>=0){keep.add(at);stack.push([a,at],[at,b]);}}
+ const out=pts.filter((_,i)=>keep.has(i));return out.length>=3?out:pts;
 }
 function hash(s){let h=2166136261;for(const c of String(s)){h^=c.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;}
 function random(seed){let x=seed>>>0;return ()=>{x^=x<<13;x^=x>>>17;x^=x<<5;return (x>>>0)/4294967296;};}
@@ -81,7 +131,7 @@ function terrainMark(kind,x,y,scale=1){
 }
 function regionSVG(f){
  if(f.points.length<3)return '';
- const polygon=f.points.map(pt=>`${pt.x},${pt.y}`).join(' '),box=bounds(f.points);
+ const shape=shapePath(f.points,!!f.smooth),box=bounds(f.points);
  const entries=[{kind:f.terrain1||'plains',weight:clamp(f.weight1,0,100)},{kind:f.terrain2||'evergreen',weight:clamp(f.weight2,0,100)},{kind:f.terrain3||'rocky-mountains',weight:clamp(f.weight3,0,100)}].filter(t=>t.weight>0);
  if(!entries.length)entries.push({kind:'plains',weight:100});
  const weights=entries.reduce((a,b)=>a+b.weight,0),rng=random(hash(f.id));
@@ -95,10 +145,10 @@ function regionSVG(f){
   const jitterX=(rng()-.5)*14,jitterY=(rng()-.5)*14;
   cells+=`<rect x="${x}" y="${y}" width="${cell+1}" height="${cell+1}" fill="${terra[ch]?.color||'#b9c894'}" opacity=".78"/>${terrainMark(ch,x+cell/2+jitterX,y+cell/2+jitterY,0.8)}`;
  }
- return `<g class="map-feature ${selectedId===f.id?'map-selected':''}" data-map-feature="${esc(f.id)}"><defs><clipPath id="${clip}"><polygon points="${polygon}"/></clipPath></defs>
- <polygon points="${polygon}" fill="${terra[f.terrain1]?.color||'#aebc91'}" stroke="#725c44" stroke-width="${selectedId===f.id?3.5:2}" stroke-linejoin="round"/>
+ return `<g class="map-feature ${selectedId===f.id?'map-selected':''}" data-map-feature="${esc(f.id)}"><defs><clipPath id="${clip}"><path d="${shape}"/></clipPath></defs>
+ <path d="${shape}" fill="${terra[f.terrain1]?.color||'#aebc91'}" stroke="#725c44" stroke-width="${selectedId===f.id?3.5:2}" stroke-linejoin="round"/>
  <g clip-path="url(#${clip})">${cells}</g>
- <polygon points="${polygon}" fill="none" stroke="#f2dfb9" stroke-width="1.1" stroke-linejoin="round" opacity=".7"/>
+ <path d="${shape}" fill="none" stroke="#f2dfb9" stroke-width="1.1" stroke-linejoin="round" opacity=".7"/>
  </g>`;
 }
 function lineSVG(f){
@@ -114,7 +164,8 @@ function svgContent(m){
  <rect x="23" y="23" width="${W-46}" height="${H-46}" rx="3" fill="none" stroke="${theme[3]}" opacity=".65" stroke-width="2"/>
  <rect x="32" y="32" width="${W-64}" height="${H-64}" fill="none" stroke="${theme[3]}" opacity=".3" stroke-width="1"/>
  ${features}<g opacity=".62" pointer-events="none" stroke="#6c5944" fill="none" stroke-width="1.5"><circle cx="933" cy="92" r="27"/><path d="M933 53 v78 M896 92 h74 M933 70 l8 22 -8 22 -8 -22z" fill="#977a57"/></g><text x="933" y="49" font-family="Georgia,serif" font-size="17" fill="#6c5944" text-anchor="middle">N</text>
- <polyline id="map-draft-line" points="" fill="none" stroke="#68594c" stroke-width="3" stroke-dasharray="4 4" stroke-linecap="round"/>
+ ${mapHandles(m)}
+ <polyline id="map-draft-line" points="" fill="none" stroke="#68594c" stroke-width="3" stroke-dasharray="4 4" stroke-linecap="round" pointer-events="none"/>
  `;
 }
 function mapSVG(m,forExport=false){
@@ -229,7 +280,7 @@ function onAction(a,el,p){
      addRegion(m,pts,'plains','Island '+n);
    }
   }else{
-   addRegion(m,presetPoints(shape),shape==='lake'?'lake':shape==='canyon'?'canyon':'plains',shape.charAt(0).toUpperCase()+shape.slice(1));
+   addRegion(m,presetPoints(shape),shape==='lake'?'lake':shape==='canyon'?'canyon':'plains',shape.charAt(0).toUpperCase()+shape.slice(1),shape==='continent');
   }
   tool='select';
  }
