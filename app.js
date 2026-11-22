@@ -1,4 +1,4 @@
-/* Story Spindle — entirely client-side, deliberately no AI, API calls, external scripts, or trackers. */
+/* Story Spindle — client-side, deliberately AI-free. Optional Openverse search makes external requests. */
 (() => {
 'use strict';
 const STORAGE_KEY = 'story-studio.v1';
@@ -336,7 +336,7 @@ function normalizeProject(raw){
 async function importFile(file){if(!file)return;try{if(file.size>30*1024*1024)throw new Error('Backup exceeds 30 MB.');const parsed=JSON.parse(await file.text());const raws=parsed.project?[parsed.project]:(Array.isArray(parsed.projects)?parsed.projects:[]);if(!raws.length)throw new Error('No project was found in that file.');const imported=raws.map(normalizeProject);SpindleProgress.pauseForProjectChange(project());SpindleTrees.reset();SpindleMood.reset();SpindleMaps.reset();store.projects.push(...imported);store.activeId=imported[0].id;activeView='dashboard';continuityResults=null;selectedChapterId=null;save();render();toast(imported.length===1?`Imported “${imported[0].title}”.`:`Imported ${imported.length} novels.`);}catch(err){toast('Import failed: '+err.message);}finally{document.getElementById('import-input').value='';}}
 function changeProject(id){if(!store.projects.some(p=>p.id===id))return;SpindleProgress.pauseForProjectChange(project());SpindleTrees.reset();SpindleMood.reset();SpindleMaps.reset();store.activeId=id;activeView='dashboard';selectedChapterId=null;continuityResults=null;save();render();window.scrollTo({top:0});}
 function runScan(chapterId=null){continuityResults=scan(project());if(chapterId){continuityResults=continuityResults.filter(x=>x.chapterId===chapterId);}activeView='continuity';render();document.getElementById('scan-results')?.scrollIntoView({behavior:'smooth',block:'start'});}
-function action(a,elem){const p=project();if(SpindleMood.onAction(a,elem,p))return;if(SpindleMaps.onAction(a,elem,p))return;if(SpindleTrees.onAction(a,elem,p))return;if(SpindleProgress.handleAction(a,elem,p))return;if(SpindleFeatures.handleAction(a,elem,p,{save,render,toast,makeId}))return;switch(a){
+function action(a,elem){const p=project();if(SpindleHelp.onAction(a,elem))return;if(SpindleMood.onAction(a,elem,p))return;if(SpindleMaps.onAction(a,elem,p))return;if(SpindleTrees.onAction(a,elem,p))return;if(SpindleProgress.handleAction(a,elem,p))return;if(SpindleFeatures.handleAction(a,elem,p,{save,render,toast,makeId}))return;switch(a){
  case 'nav':activeView=elem.dataset.view;continuityResults=null;render();window.scrollTo({top:0});break;
  case 'add':{const path=elem.dataset.path;const entry=newItem(path);list(p,path).push(entry);if(path==='chapters')selectedChapterId=entry.id;continuityResults=null;save();render();break;}
  case 'remove':{const path=elem.dataset.path,id=elem.dataset.id;const items=list(p,path);const x=items.findIndex(it=>it.id===id);if(x===-1)return;if(!confirm('Remove this entry? This cannot be undone unless you have a backup.'))return;items.splice(x,1);if(path==='strings')p.stringLinks=p.stringLinks.filter(link=>link.a!==id && link.b!==id);if(path==='chapters' && selectedChapterId===id)selectedChapterId=null;continuityResults=null;save();render();break;}
@@ -355,8 +355,8 @@ function action(a,elem){const p=project();if(SpindleMood.onAction(a,elem,p))retu
  case 'export-manuscript':exportManuscript();break;
  case 'import-project':document.getElementById('import-input').click();break;
  }}
-document.addEventListener('click',e=>{const target=e.target.closest('[data-action]');if(target && target.tagName!=='INPUT'){e.preventDefault();action(target.dataset.action,target);}if(e.target.classList.contains('modal-layer'))closeModal();});
-document.addEventListener('input',e=>{const target=e.target;if(SpindleMood.onInput(target,project()))return;if(SpindleMaps.onInput(target,project()))return;if(target.dataset.exercise){project().exerciseNotes[target.dataset.exercise]=target.value;save();return;}if(!target.matches('[data-bind],[data-list]'))return;if(target.dataset.list){const obj=list(project(),target.dataset.list).find(x=>x.id===target.dataset.id);if(!obj)return;if(target.dataset.key==='manuscript')SpindleProgress.logManuscriptEdit(project(),obj.manuscript||'',target.value);
+document.addEventListener('click',e=>{const target=e.target.closest('[data-action]');if(target && target.tagName!=='INPUT'){e.preventDefault();action(target.dataset.action,target);}if(e.target.classList.contains('help-layer'))SpindleHelp.close();else if(e.target.classList.contains('modal-layer'))closeModal();});
+document.addEventListener('input',e=>{const target=e.target;if(SpindleHelp.onInput(target))return;if(SpindleMood.onInput(target,project()))return;if(SpindleMaps.onInput(target,project()))return;if(target.dataset.exercise){project().exerciseNotes[target.dataset.exercise]=target.value;save();return;}if(!target.matches('[data-bind],[data-list]'))return;if(target.dataset.list){const obj=list(project(),target.dataset.list).find(x=>x.id===target.dataset.id);if(!obj)return;if(target.dataset.key==='manuscript')SpindleProgress.logManuscriptEdit(project(),obj.manuscript||'',target.value);
   obj[target.dataset.key]=target.type==='checkbox'?target.checked:target.value;
   if(target.dataset.key==='manuscript'){const wc=document.getElementById('writer-word-count');if(wc)wc.textContent=`Chapter: ${countWords(target.value).toLocaleString()} words · Manuscript: ${project().chapters.reduce((sum,ch)=>sum+countWords(ch.manuscript),0).toLocaleString()} words · ${target.value.length.toLocaleString()} characters`;SpindleFeatures.updateWritingCount(project(),target.dataset.id,countWords);}
  }else{setPath(project(),target.dataset.bind,target.value);if(target.dataset.bind==='title'){document.querySelector('.story-ribbon h1')?.replaceChildren(document.createTextNode(target.value));}}
@@ -369,11 +369,12 @@ document.addEventListener('change',e=>{const target=e.target;if(SpindleMood.onCh
  if(target.dataset.list){const obj=list(project(),target.dataset.list).find(x=>x.id===target.dataset.id);if(obj)obj[target.dataset.key]=target.value;save();return;}
  if(target.dataset.bind){setPath(project(),target.dataset.bind,target.value);continuityResults=null;save();if(target.dataset.bind==='plot.status')render();}
  });
-document.addEventListener('keydown',e=>{if(SpindleMood.onKeydown(e))return;if(SpindleMaps.onKeydown(e))return;if(SpindleTrees.onKeydown(e))return;if(e.key==='Escape')closeModal();});
+document.addEventListener('keydown',e=>{if(SpindleHelp.onKeydown(e))return;if(SpindleMood.onKeydown(e))return;if(SpindleMaps.onKeydown(e))return;if(SpindleTrees.onKeydown(e))return;if(e.key==='Escape')closeModal();});
 SpindleProgress.configure({project,projects:()=>store.projects,save,render,toast,makeId,countWords});
 SpindleTrees.configure({save,render,toast,makeId,navigate:(view)=>{activeView=view;render();window.scrollTo({top:0});}});
 SpindleMood.configure({project,save,render,toast,makeId,esc});
 SpindleMaps.configure({project,save,render,toast,makeId,esc});
+SpindleHelp.configure({currentView:()=>activeView,esc,navigate:view=>{if(!NAV.some(([id])=>id===view))return;activeView=view;render();window.scrollTo({top:0});}});
 document.addEventListener('pointerdown',e=>{if(SpindleMood.onPointerDown(e))return;SpindleMaps.onPointerDown(e);});
 document.addEventListener('pointermove',e=>{if(SpindleMood.onPointerMove(e))return;SpindleMaps.onPointerMove(e);});
 document.addEventListener('pointerup',e=>{if(SpindleMood.onPointerUp(e))return;SpindleMaps.onPointerUp(e);});
