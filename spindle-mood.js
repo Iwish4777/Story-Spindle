@@ -132,7 +132,7 @@ function render(p,{heading}){
  </section>`;
 }
 function liveStage(layer,b) {
- const el=document.querySelector(`[data-mood-layer="${CSS.escape(layer.id)}"]`);if(!el)return;
+ const el=[...document.querySelectorAll("[data-mood-layer]")].find(n=>n.dataset.moodLayer===layer.id);if(!el)return;
  el.style.left=layer.x/10+'%';el.style.top=layer.y/H*100+'%';el.style.width=layer.w/10+'%';el.style.height=layer.h/H*100+'%';el.style.transform=`rotate(${layer.rotate}deg)`;
  const t=el.querySelector('.mood-text-content');if(t){t.textContent=layer.text||'';t.style.color=cleanColor(layer.color);t.style.fontFamily=fontCSS(layer.font);t.style.fontWeight=layer.bold?'bold':'normal';t.style.fontStyle=layer.italic?'italic':'normal';t.style.textDecoration=layer.underline?'underline':'none';t.style.textShadow=layer.shadow?'2px 3px 4px #182c275a':'none';t.style.webkitTextStroke=`${layer.outline}px ${cleanColor(layer.outlineColor)}`;t.style.textAlign=layer.align;t.style.fontSize=`clamp(8px,${layer.size/10}cqw,100px)`;}
  if(layer.type==='swatch'){const sw=el.querySelector('.mood-fabric');sw.style.cssText=swatchBackground(layer.color,layer.pattern);sw.querySelector('span').textContent=layer.caption||'';}

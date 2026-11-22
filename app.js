@@ -5,7 +5,7 @@ const STORAGE_KEY = 'story-studio.v1';
 const NAV = [
   ['dashboard','⌂','Overview'],['plot','◇','Plot'],['main','♙','Main characters'],['world','◈','Worldbuilding'],
   ['other','♧','Other characters'],['ending','⚑','Ending'],['themes','✿','Themes'],['chapters','▤','Chapter outlines'],
-  ['writing','✎','Writing'],['trees','♧','Story Trees'],['goals','◷','Goals'],['wordbank','✦','Word parking lot'],['strings','⌁','Strings'],['continuity','◎','Continuity checks'],['settings','⚙','Project & backup']
+  ['writing','✎','Writing'],['mood','◐','Mood Boards'],['maps','⌖','Map Studio'],['trees','♧','Story Trees'],['goals','◷','Goals'],['wordbank','✦','Word parking lot'],['strings','⌁','Strings'],['continuity','◎','Continuity checks'],['settings','⚙','Project & backup']
 ];
 const WORLD_CATEGORIES = ['Geography & lands','Cultures & societies','Science & nature','Magic & technology','History & politics','Creatures & ecology','Other'];
 const GUIDES = {
@@ -68,7 +68,7 @@ const makeId = () => (typeof crypto !== 'undefined' && crypto.randomUUID ? crypt
 const defaultProject = (name='Untitled novel') => ({
  id:makeId(),title:name,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),
  plot:{status:'unsure',summary:'',events:[]},mainCharacters:[],world:[],supportingCharacters:[],
- ending:{summary:'',openThreads:''},themes:[],chapters:[],revelations:[],customChecks:[],wordBank:[],strings:[],stringLinks:[],storyTreeLinks:[],goals:[],writingActivity:{},writingTimer:{running:false,lastTickAt:null},exerciseNotes:{},
+ ending:{summary:'',openThreads:''},themes:[],chapters:[],revelations:[],customChecks:[],wordBank:[],strings:[],stringLinks:[],storyTreeLinks:[],moodBoards:[],storyMaps:[],goals:[],writingActivity:{},writingTimer:{running:false,lastTickAt:null},exerciseNotes:{},
 });
 const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const countWords = str => (String(str || '').match(/[\p{L}\p{N}]+(?:[’'-][\p{L}\p{N}]+)*/gu)||[]).length;
@@ -82,7 +82,7 @@ function toast(message){toastElement.textContent=message;toastElement.classList.
 let store;
 try { const raw=localStorage.getItem(STORAGE_KEY); store=raw?JSON.parse(raw):null; } catch(e) { store=null; }
 if(!store || !Array.isArray(store.projects) || !store.projects.length) {const p=defaultProject();store={version:1,activeId:p.id,projects:[p]};}
-for(const p of store.projects){SpindleFeatures.ensureProject(p);SpindleProgress.ensureProject(p);SpindleTrees.ensure(p);}
+for(const p of store.projects){SpindleFeatures.ensureProject(p);SpindleProgress.ensureProject(p);SpindleTrees.ensure(p);SpindleMood.ensure(p);SpindleMaps.ensure(p);}
 let activeView='dashboard';let selectedChapterId=null;let continuityResults=null;let storageError=false;
 const project = () => store.projects.find(p=>p.id===store.activeId) || store.projects[0];
 function save(){project().updatedAt=new Date().toISOString();try{localStorage.setItem(STORAGE_KEY,JSON.stringify(store));storageError=false;const el=document.getElementById('save-status');if(el)el.textContent='✓ Saved locally';}catch(e){storageError=true;const el=document.getElementById('save-status');if(el)el.textContent='⚠ Storage full';toast('Browser storage is unavailable or full. Export a backup immediately.');}}
@@ -145,7 +145,9 @@ function dashboard(p){
  ['wordbank','✦','Park interesting words','Collect words you want to weave into your manuscript.'],
  ['strings','⌁','Gather your strings','Capture sparks and discover connections between them.'],
  ['goals','◷','Set writing goals','Choose daily targets or creative milestones.'],
- ['trees','♧','Explore Story Trees','See and shape connections across the story.']
+ ['trees','♧','Explore Story Trees','See and shape connections across the story.'],
+ ['mood','◐','Build mood boards','Collect images, text, and tactile color inspiration.'],
+ ['maps','⌖','Illustrate story maps','Sketch worlds, landforms and routes on parchment.']
  ].map(([key,icon,title,desc])=>`<button class="link-card" data-action="nav" data-view="${key}"><span style="font-size:23px">${icon}</span><span class="title">${title}</span><span class="description">${desc}</span></button>`).join('')}</div>
  ${SpindleProgress.dashboardWidgets(p,{esc})}
  <div class="info" style="margin-top:19px"><strong>Private by design.</strong> Your work is saved in this browser, not on a server. Export regular backups from Project & backup. The app has no AI features, accounts, analytics, or outside connections.</div>
@@ -243,7 +245,7 @@ function settingsPage(p){return `<section class="page">${heading('Ownership & co
  </section>`;}
 function render(){const p=project();renderNav();renderSwitcher();document.getElementById('save-status').textContent=storageError?'⚠ Storage full':'✓ Saved locally';
  const extras={esc,heading,itemField,itemHead,addButton,emptyState,options};
- const pages={dashboard,plot:plotPage,main:p=>charactersPage(p,true),world:worldPage,other:p=>charactersPage(p,false),ending:endingPage,themes:themesPage,chapters:chapterPage,writing:writingPage,wordbank:p=>SpindleFeatures.wordBankPage(p,extras),strings:p=>SpindleFeatures.stringsPage(p,extras),goals:p=>SpindleProgress.goalsPage(p,extras),trees:p=>SpindleTrees.render(p,extras),continuity:continuityPage,settings:settingsPage};
+ const pages={dashboard,plot:plotPage,main:p=>charactersPage(p,true),world:worldPage,other:p=>charactersPage(p,false),ending:endingPage,themes:themesPage,chapters:chapterPage,writing:writingPage,wordbank:p=>SpindleFeatures.wordBankPage(p,extras),strings:p=>SpindleFeatures.stringsPage(p,extras),goals:p=>SpindleProgress.goalsPage(p,extras),trees:p=>SpindleTrees.render(p,extras),mood:p=>SpindleMood.render(p,extras),maps:p=>SpindleMaps.render(p,extras),continuity:continuityPage,settings:settingsPage};
  document.getElementById('main-content').innerHTML=(pages[activeView]||dashboard)(p);
 }
 function tokenizeSentences(text){return String(text||'').split(/(?<=[.!?])\s+|\n+/g).filter(Boolean);}
@@ -308,17 +310,17 @@ function exportManuscript(){const p=project();const text=`${p.title}\n${'='.repe
 function normalizeProject(raw){
  if(!raw || typeof raw!=='object' || Array.isArray(raw) || !('plot' in raw) || !('chapters' in raw))throw new Error('File does not look like a Story Studio project.');
  const p={...defaultProject(),...raw};p.id=makeId();p.title=String(p.title||'Imported novel')+' (imported)';
- const defaults=defaultProject();for(const key of ['mainCharacters','world','supportingCharacters','themes','chapters','revelations','customChecks','wordBank','strings','stringLinks','storyTreeLinks','goals']){if(!Array.isArray(p[key]))p[key]=[];}
+ const defaults=defaultProject();for(const key of ['mainCharacters','world','supportingCharacters','themes','chapters','revelations','customChecks','wordBank','strings','stringLinks','storyTreeLinks','moodBoards','storyMaps','goals']){if(!Array.isArray(p[key]))p[key]=[];}
  p.plot={...defaults.plot,...p.plot};if(!Array.isArray(p.plot.events))p.plot.events=[];
  p.ending={...defaults.ending,...p.ending};p.exerciseNotes=p.exerciseNotes&&typeof p.exerciseNotes==='object'?p.exerciseNotes:{};
  for(const c of p.chapters){if(!c.id)c.id=makeId();if(!Array.isArray(c.characterIds))c.characterIds=[];if(!Array.isArray(c.knowledgeUses))c.knowledgeUses=[];if(typeof c.manuscript!=='string')c.manuscript='';}
- SpindleFeatures.ensureProject(p);SpindleProgress.ensureProject(p);SpindleTrees.ensure(p);
+ SpindleFeatures.ensureProject(p);SpindleProgress.ensureProject(p);SpindleTrees.ensure(p);SpindleMood.ensure(p);SpindleMaps.ensure(p);
  return p;
 }
-async function importFile(file){if(!file)return;try{if(file.size>30*1024*1024)throw new Error('Backup exceeds 30 MB.');const parsed=JSON.parse(await file.text());const raws=parsed.project?[parsed.project]:(Array.isArray(parsed.projects)?parsed.projects:[]);if(!raws.length)throw new Error('No project was found in that file.');const imported=raws.map(normalizeProject);SpindleProgress.pauseForProjectChange(project());SpindleTrees.reset();store.projects.push(...imported);store.activeId=imported[0].id;activeView='dashboard';continuityResults=null;selectedChapterId=null;save();render();toast(imported.length===1?`Imported “${imported[0].title}”.`:`Imported ${imported.length} novels.`);}catch(err){toast('Import failed: '+err.message);}finally{document.getElementById('import-input').value='';}}
-function changeProject(id){if(!store.projects.some(p=>p.id===id))return;SpindleProgress.pauseForProjectChange(project());SpindleTrees.reset();store.activeId=id;activeView='dashboard';selectedChapterId=null;continuityResults=null;save();render();window.scrollTo({top:0});}
+async function importFile(file){if(!file)return;try{if(file.size>30*1024*1024)throw new Error('Backup exceeds 30 MB.');const parsed=JSON.parse(await file.text());const raws=parsed.project?[parsed.project]:(Array.isArray(parsed.projects)?parsed.projects:[]);if(!raws.length)throw new Error('No project was found in that file.');const imported=raws.map(normalizeProject);SpindleProgress.pauseForProjectChange(project());SpindleTrees.reset();SpindleMood.reset();SpindleMaps.reset();store.projects.push(...imported);store.activeId=imported[0].id;activeView='dashboard';continuityResults=null;selectedChapterId=null;save();render();toast(imported.length===1?`Imported “${imported[0].title}”.`:`Imported ${imported.length} novels.`);}catch(err){toast('Import failed: '+err.message);}finally{document.getElementById('import-input').value='';}}
+function changeProject(id){if(!store.projects.some(p=>p.id===id))return;SpindleProgress.pauseForProjectChange(project());SpindleTrees.reset();SpindleMood.reset();SpindleMaps.reset();store.activeId=id;activeView='dashboard';selectedChapterId=null;continuityResults=null;save();render();window.scrollTo({top:0});}
 function runScan(chapterId=null){continuityResults=scan(project());if(chapterId){continuityResults=continuityResults.filter(x=>x.chapterId===chapterId);}activeView='continuity';render();document.getElementById('scan-results')?.scrollIntoView({behavior:'smooth',block:'start'});}
-function action(a,elem){const p=project();if(SpindleTrees.onAction(a,elem,p))return;if(SpindleProgress.handleAction(a,elem,p))return;if(SpindleFeatures.handleAction(a,elem,p,{save,render,toast,makeId}))return;switch(a){
+function action(a,elem){const p=project();if(SpindleMood.onAction(a,elem,p))return;if(SpindleMaps.onAction(a,elem,p))return;if(SpindleTrees.onAction(a,elem,p))return;if(SpindleProgress.handleAction(a,elem,p))return;if(SpindleFeatures.handleAction(a,elem,p,{save,render,toast,makeId}))return;switch(a){
  case 'nav':activeView=elem.dataset.view;continuityResults=null;render();window.scrollTo({top:0});break;
  case 'add':{const path=elem.dataset.path;const entry=newItem(path);list(p,path).push(entry);if(path==='chapters')selectedChapterId=entry.id;continuityResults=null;save();render();break;}
  case 'remove':{const path=elem.dataset.path,id=elem.dataset.id;const items=list(p,path);const x=items.findIndex(it=>it.id===id);if(x===-1)return;if(!confirm('Remove this entry? This cannot be undone unless you have a backup.'))return;items.splice(x,1);if(path==='strings')p.stringLinks=p.stringLinks.filter(link=>link.a!==id && link.b!==id);if(path==='chapters' && selectedChapterId===id)selectedChapterId=null;continuityResults=null;save();render();break;}
@@ -330,20 +332,20 @@ function action(a,elem){const p=project();if(SpindleTrees.onAction(a,elem,p))ret
  case 'add-and-write':{const c=newItem('chapters');p.chapters.push(c);selectedChapterId=c.id;activeView='writing';save();render();document.getElementById('manuscript-editor')?.focus();break;}
  case 'scan':runScan();break;
  case 'continuity-for-chapter':runScan(elem.dataset.id);break;
- case 'new-project':{const title=prompt('What is your new novel called?','Untitled novel');if(title===null)return;const np=defaultProject(title.trim()||'Untitled novel');SpindleProgress.pauseForProjectChange(project());SpindleTrees.reset();store.projects.push(np);store.activeId=np.id;activeView='dashboard';selectedChapterId=null;continuityResults=null;save();render();toast('New novel created.');break;}
- case 'delete-project':{if(store.projects.length===1){toast('Create another project first, or export a backup before clearing data.');return;}if(!confirm(`Permanently delete “${p.title}” from this browser? Export a backup first if you want to preserve it.`))return;SpindleProgress.pauseForProjectChange(p);SpindleTrees.reset();store.projects=store.projects.filter(x=>x.id!==p.id);store.activeId=store.projects[0].id;activeView='dashboard';selectedChapterId=null;continuityResults=null;save();render();break;}
+ case 'new-project':{const title=prompt('What is your new novel called?','Untitled novel');if(title===null)return;const np=defaultProject(title.trim()||'Untitled novel');SpindleProgress.pauseForProjectChange(project());SpindleTrees.reset();SpindleMood.reset();SpindleMaps.reset();store.projects.push(np);store.activeId=np.id;activeView='dashboard';selectedChapterId=null;continuityResults=null;save();render();toast('New novel created.');break;}
+ case 'delete-project':{if(store.projects.length===1){toast('Create another project first, or export a backup before clearing data.');return;}if(!confirm(`Permanently delete “${p.title}” from this browser? Export a backup first if you want to preserve it.`))return;SpindleProgress.pauseForProjectChange(p);SpindleTrees.reset();SpindleMood.reset();SpindleMaps.reset();store.projects=store.projects.filter(x=>x.id!==p.id);store.activeId=store.projects[0].id;activeView='dashboard';selectedChapterId=null;continuityResults=null;save();render();break;}
  case 'export-project':exportProject();break;
  case 'export-all':exportAll();break;
  case 'export-manuscript':exportManuscript();break;
  case 'import-project':document.getElementById('import-input').click();break;
  }}
 document.addEventListener('click',e=>{const target=e.target.closest('[data-action]');if(target && target.tagName!=='INPUT'){e.preventDefault();action(target.dataset.action,target);}if(e.target.classList.contains('modal-layer'))closeModal();});
-document.addEventListener('input',e=>{const target=e.target;if(target.dataset.exercise){project().exerciseNotes[target.dataset.exercise]=target.value;save();return;}if(!target.matches('[data-bind],[data-list]'))return;if(target.dataset.list){const obj=list(project(),target.dataset.list).find(x=>x.id===target.dataset.id);if(!obj)return;if(target.dataset.key==='manuscript')SpindleProgress.logManuscriptEdit(project(),obj.manuscript||'',target.value);
+document.addEventListener('input',e=>{const target=e.target;if(SpindleMood.onInput(target,project()))return;if(SpindleMaps.onInput(target,project()))return;if(target.dataset.exercise){project().exerciseNotes[target.dataset.exercise]=target.value;save();return;}if(!target.matches('[data-bind],[data-list]'))return;if(target.dataset.list){const obj=list(project(),target.dataset.list).find(x=>x.id===target.dataset.id);if(!obj)return;if(target.dataset.key==='manuscript')SpindleProgress.logManuscriptEdit(project(),obj.manuscript||'',target.value);
   obj[target.dataset.key]=target.type==='checkbox'?target.checked:target.value;
   if(target.dataset.key==='manuscript'){const wc=document.getElementById('writer-word-count');if(wc)wc.textContent=`Chapter: ${countWords(target.value).toLocaleString()} words · Manuscript: ${project().chapters.reduce((sum,ch)=>sum+countWords(ch.manuscript),0).toLocaleString()} words · ${target.value.length.toLocaleString()} characters`;SpindleFeatures.updateWritingCount(project(),target.dataset.id,countWords);}
  }else{setPath(project(),target.dataset.bind,target.value);if(target.dataset.bind==='title'){document.querySelector('.story-ribbon h1')?.replaceChildren(document.createTextNode(target.value));}}
  continuityResults=null;save();});
-document.addEventListener('change',e=>{const target=e.target;if(SpindleTrees.onChange(target))return;SpindleProgress.handleChange(target);
+document.addEventListener('change',e=>{const target=e.target;if(SpindleMood.onChange(target,project()))return;if(SpindleMaps.onChange(target,project()))return;if(SpindleTrees.onChange(target))return;SpindleProgress.handleChange(target);
  if(target.id==='project-select'){changeProject(target.value);return;}
  if(target.id==='import-input'){importFile(target.files[0]);return;}
  if(target.dataset.action==='toggle-ref'){const c=project().chapters.find(c=>c.id===target.dataset.chapter);if(!c)return;const collection=c[target.dataset.kind]||[];if(target.checked && !collection.includes(target.value))collection.push(target.value);else if(!target.checked)c[target.dataset.kind]=collection.filter(x=>x!==target.value);save();return;}
@@ -351,8 +353,14 @@ document.addEventListener('change',e=>{const target=e.target;if(SpindleTrees.onC
  if(target.dataset.list){const obj=list(project(),target.dataset.list).find(x=>x.id===target.dataset.id);if(obj)obj[target.dataset.key]=target.value;save();return;}
  if(target.dataset.bind){setPath(project(),target.dataset.bind,target.value);continuityResults=null;save();if(target.dataset.bind==='plot.status')render();}
  });
-document.addEventListener('keydown',e=>{if(SpindleTrees.onKeydown(e))return;if(e.key==='Escape')closeModal();});
+document.addEventListener('keydown',e=>{if(SpindleMood.onKeydown(e))return;if(SpindleMaps.onKeydown(e))return;if(SpindleTrees.onKeydown(e))return;if(e.key==='Escape')closeModal();});
 SpindleProgress.configure({project,projects:()=>store.projects,save,render,toast,makeId,countWords});
 SpindleTrees.configure({save,render,toast,makeId,navigate:(view)=>{activeView=view;render();window.scrollTo({top:0});}});
+SpindleMood.configure({project,save,render,toast,makeId,esc});
+SpindleMaps.configure({project,save,render,toast,makeId,esc});
+document.addEventListener('pointerdown',e=>{if(SpindleMood.onPointerDown(e))return;SpindleMaps.onPointerDown(e);});
+document.addEventListener('pointermove',e=>{if(SpindleMood.onPointerMove(e))return;SpindleMaps.onPointerMove(e);});
+document.addEventListener('pointerup',e=>{if(SpindleMood.onPointerUp(e))return;SpindleMaps.onPointerUp(e);});
+document.addEventListener('pointercancel',e=>{SpindleMood.onPointerUp(e);SpindleMaps.onPointerUp(e);});
 render();
 })();

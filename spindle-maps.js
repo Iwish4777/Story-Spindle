@@ -167,7 +167,7 @@ function updatePreview(){
 function onPointerDown(e){
  const svg=e.target.closest?.('#map-canvas');if(!svg||!current(ctx.project()))return false;
  const p=editPointFromEvent(e);if(!p)return false;const m=current(ctx.project());
- if(tool==='polygon'){polygonPoints.push(p);updatePreview();ctx.render();return true;}
+ if(tool==='polygon'){polygonPoints.push(p);ctx.render();updatePreview();return true;}
  if(tool==='label'){addLabel(m,p);return true;}
  const clicked=e.target.closest?.('[data-map-feature]');
  if(tool==='select'){
